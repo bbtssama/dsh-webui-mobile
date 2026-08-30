@@ -1,5 +1,5 @@
-# dsh-mobile-hanui bundle patch: host stub so client-modules can scan `dsh.client`
+# dsh-webui-mobile bundle patch: host stub so client-modules can scan `dsh.client`
 # (all mobile UI logic lives in the client-side src/client.js).
 - insert:
-    - id: dsh-mobile-hanui-shell
-      name: dsh-mobile-hanui
+    - id: dsh-webui-mobile-shell
+      name: dsh-webui-mobile
