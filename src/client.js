@@ -232,8 +232,14 @@ window.__ModuleLoader__.load({
     transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
   }
 
+  /* Open state must be transform:none — NOT translate3d(0,0,0). An identity
+     transform still makes the drawer the containing block for fixed-position
+     descendants (the settings dialog's .VOzbGW_overlay is portaled into the
+     sidebar DOM), so the wide settings sheet overflows/offsets. With
+     transform:none the overlay is viewport-anchored → the settings sheet
+     dims the full screen and centers (the dsh-mobile-nav approach). */
   html.${HTML_CLASS} .${CLS.frame}:not([data-sidebar-collapsed]) .${CLS.sidebar} {
-    transform: translate3d(0, 0, 0) !important;
+    transform: none !important;
     pointer-events: auto !important;
   }
 
@@ -1392,9 +1398,10 @@ window.__ModuleLoader__.load({
           }
           // Other nav (new chat, settings, …) — skip project/folder expand rows
           if (t.closest(`.${SIDEBAR_ROW.project}`)) return
-          // The settings trigger opens a full-screen overlay that lives INSIDE
-          // the drawer; closing the drawer here would kill the just-opened panel
-          // (the "settings flashes then disappears" bug). Keep the drawer open.
+          // The settings trigger opens a full-screen overlay that is portaled
+          // into the sidebar DOM; with the drawer's transform:none the overlay
+          // is viewport-anchored, so keeping the drawer open is fine (and
+          // avoids the "settings flashes then disappears" bug).
           if (t.closest(`.${SETTINGS.overlay}, .${SETTINGS.trigger}`)) return
           const actionable = t.closest(
             'button, a, [role="button"], [role="option"], [role="menuitem"], li, [data-session-id], [data-conversation-id]',
