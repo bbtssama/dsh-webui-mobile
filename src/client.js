@@ -693,9 +693,9 @@ window.__ModuleLoader__.load({
     display: none !important;
   }
 
-  /* Settings panel: desktop is an 800px two-column sheet (188px nav + content).
-     On phones turn it full-screen single-column so the nav becomes a top strip
-     and the content fills the viewport instead of overflowing / glitching. */
+  /* Settings panel: desktop is an 800px two-column sheet. On phones turn it
+     full-screen single-column (stable, no drag-move, readable) so the nav
+     becomes a top strip and the content fills the viewport. */
   html.${HTML_CLASS} .${SETTINGS.panel} {
     width: 100vw !important;
     max-width: 100vw !important;
