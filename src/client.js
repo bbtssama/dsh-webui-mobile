@@ -17,7 +17,7 @@
  * - Plugin only (dsh.client)
  */
 window.__ModuleLoader__.load({
-  id: 'dsh-mobile-hanui',
+  id: 'dsh-webui-mobile',
   factory: (require) => {
     const module = { exports: {} }
     const exports = module.exports
@@ -27,7 +27,7 @@ window.__ModuleLoader__.load({
     const { jsx, jsxs } = require('react/jsx-runtime')
 
     const MOBILE_MQ = '(max-width: 1023px)'
-    const STYLE_ID = 'dsh-mobile-hanui-css-v1'
+    const STYLE_ID = 'dsh-webui-mobile-css-v1'
     const HTML_CLASS = 'dsh-mobile-shell'
     const ATTR_DETAILS = 'data-dsh-mobile-details-open'
     const FAB_POS_KEY = 'dsh-mobile-fab-pos'
@@ -812,7 +812,7 @@ window.__ModuleLoader__.load({
 
     function scrubLegacy() {
       if (typeof document === 'undefined') return
-      for (const old of document.querySelectorAll('style[data-plugin="dsh-mobile-hanui"]')) old.remove()
+      for (const old of document.querySelectorAll('style[data-plugin="dsh-webui-mobile"]')) old.remove()
       const html = document.documentElement
       html.removeAttribute(ATTR_DETAILS)
       html.removeAttribute('data-dsh-mobile-chrome-menu')
@@ -835,7 +835,7 @@ window.__ModuleLoader__.load({
         return
       }
       const tag = document.createElement('style')
-      tag.dataset.plugin = 'dsh-mobile-hanui'
+      tag.dataset.plugin = 'dsh-webui-mobile'
       tag.dataset.pluginCss = STYLE_ID
       tag.textContent = CSS
       document.head.appendChild(tag)
@@ -1039,14 +1039,14 @@ window.__ModuleLoader__.load({
           if (!layout) return
           return fn(layout)
         } catch (err) {
-          console.warn('[dsh-mobile-hanui] layout', err)
+          console.warn('[dsh-webui-mobile] layout', err)
         }
       }, [])
 
       const openSidebar = React.useCallback(() => {
         const layout = getLayout(getLayoutRef.current?.())
         if (!layout?.toggleSidebar) {
-          console.warn('[dsh-mobile-hanui] toggleSidebar unavailable')
+          console.warn('[dsh-webui-mobile] toggleSidebar unavailable')
           const btn = fabBtnRef.current
           if (btn) {
             btn.setAttribute('data-flash', 'true')
@@ -1108,7 +1108,7 @@ window.__ModuleLoader__.load({
               center.clientWidth === 0 &&
               document.documentElement.classList.contains(HTML_CLASS)
             ) {
-              console.warn('[dsh-mobile-hanui] center width 0 — grid placement failed')
+              console.warn('[dsh-webui-mobile] center width 0 — grid placement failed')
               document.documentElement.classList.remove(HTML_CLASS)
             }
           })
@@ -1262,7 +1262,7 @@ window.__ModuleLoader__.load({
               const f = findFrame()
               if (f && !f.hasAttribute('data-sidebar-collapsed')) layout.toggleSidebar?.()
             } catch (err) {
-              console.warn('[dsh-mobile-hanui] openDetails', err)
+              console.warn('[dsh-webui-mobile] openDetails', err)
               document.documentElement.removeAttribute(ATTR_DETAILS)
               setDetailsOpen(false)
             }
@@ -1272,7 +1272,7 @@ window.__ModuleLoader__.load({
             try {
               origClose(...args)
             } catch (err) {
-              console.warn('[dsh-mobile-hanui] closeDetails', err)
+              console.warn('[dsh-webui-mobile] closeDetails', err)
             }
             document.documentElement.removeAttribute(ATTR_DETAILS)
             setDetailsOpen(false)
@@ -1686,7 +1686,7 @@ window.__ModuleLoader__.load({
             ctx.slots.register(
               {
                 name: 'shell.overlay',
-                id: 'dsh-mobile-hanui-chrome',
+                id: 'dsh-webui-mobile-chrome',
                 order: 10,
                 label: 'Mobile chrome',
               },
@@ -1696,7 +1696,7 @@ window.__ModuleLoader__.load({
                 }),
             ),
           ),
-        'dsh-mobile-hanui: shell.overlay',
+        'dsh-webui-mobile: shell.overlay',
       )
       // Mobile-only image-upload affordance. The `conversation.input.attachments`
       // slot is kind:"single", so we take it over ONLY while mobile is active and
@@ -1715,7 +1715,7 @@ window.__ModuleLoader__.load({
                   ctx.slots.register(
                     {
                       name: 'conversation.input.attachments',
-                      id: 'dsh-mobile-hanui-image',
+                      id: 'dsh-webui-mobile-image',
                       priority: -1, // lower than the native rail's 0 → shadows it (lowest renders)
                       order: -1,
                       label: 'Mobile image upload',
@@ -1724,7 +1724,7 @@ window.__ModuleLoader__.load({
                   ),
                 )
               } catch (err) {
-                console.warn('[dsh-mobile-hanui] attachments slot', err)
+                console.warn('[dsh-webui-mobile] attachments slot', err)
               }
             } else if (!on && disposer) {
               disposer()
@@ -1738,7 +1738,7 @@ window.__ModuleLoader__.load({
             if (disposer) disposer()
           }
         },
-        'dsh-mobile-hanui: conversation.input.attachments',
+        'dsh-webui-mobile: conversation.input.attachments',
       )
     }
 
