@@ -1,7 +1,7 @@
 {
-  "name": "dsh-mobile-hanui",
-  "version": "0.2.5",
-  "description": "Standalone mobile UI shell for the DeepSeek Harness web GUI (phone layout, drawers, FAB, mobile composer fixes)",
+  "name": "dsh-webui-mobile",
+  "version": "0.3.0",
+  "description": "Mobile web shell for the DeepSeek Harness GUI: phone layout, drawers, FAB, mobile composer fixes, in-composer image upload",
   "type": "module",
   "main": "./src/index.js",
   "exports": {
@@ -15,7 +15,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Z-6354/dsh-mobile-hanui.git"
+    "url": "git+https://github.com/bbtssama/dsh-webui-mobile.git"
   },
   "scripts": {
     "test": "node --test",
