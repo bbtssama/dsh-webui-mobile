@@ -718,6 +718,16 @@ window.__ModuleLoader__.load({
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none !important;
   }
+  /* The settings dialog header (title + close X) is reparented by our effect
+     into the nav strip; make it stick to the RIGHT edge of the scrollable nav
+     so the close X is always visible at the top-right corner (nav's look). */
+  html.${HTML_CLASS} .${SETTINGS.nav} [class*="_header"]:not([class*="_headerActions"]) {
+    position: sticky !important;
+    right: 0 !important;
+    margin-left: auto !important;
+    flex: none !important;
+    background: var(--dsw-alias-bg-base, #fff) !important;
+  }
   /* Each nav cell stays a fixed pill so the strip scrolls horizontally. */
   html.${HTML_CLASS} .${SETTINGS.panel} .${SETTINGS.nav} .${SETTINGS.navCell} {
     flex: 0 0 auto !important;
@@ -1681,8 +1691,43 @@ window.__ModuleLoader__.load({
       })
     }
 
+    // Move the settings dialog's header (title + close X) into its nav row so
+    // the X sits in the top nav strip — the dsh-mobile-nav
+    // "settings-toolbar-reparent" behavior. Restore on close; the dialog DOM may
+    // be rebuilt by React, so refresh the origin each time we move the header.
+    function installSettingsHeaderReparent() {
+      let origin = null
+      const reparent = () => {
+        const dialog = document.querySelector('[aria-modal="true"]')
+        if (!dialog) return
+        const nav = dialog.querySelector(':scope > [class*="_nav"]')
+        const header = dialog.querySelector('[class*="_header"]:not([class*="_headerActions"])')
+        if (!nav || !header) return
+        if (header.parentElement === nav) return
+        if (header.parentElement) origin = { parent: header.parentElement, next: header.nextSibling }
+        nav.appendChild(header)
+      }
+      const restore = () => {
+        if (!origin) return
+        const header = document.querySelector('[aria-modal="true"] [class*="_header"]:not([class*="_headerActions"])')
+        if (header && origin.parent.isConnected) origin.parent.insertBefore(header, origin.next)
+        origin = null
+      }
+      if (typeof document === 'undefined' || !window.MutationObserver) return
+      const observer = new MutationObserver(() => {
+        if (document.querySelector('[aria-modal="true"]')) reparent()
+        else restore()
+      })
+      observer.observe(document.body, { childList: true, subtree: true })
+      return () => {
+        observer.disconnect()
+        restore()
+      }
+    }
+
     function apply(ctx) {
       ensureStyle()
+      ctx.effect(installSettingsHeaderReparent, 'dsh-webui-mobile: settings-header-reparent')
       ctx.effect(
         () =>
           ctx.slots.inject('shell.overlay', () =>
