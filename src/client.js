@@ -718,10 +718,10 @@ window.__ModuleLoader__.load({
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none !important;
   }
-  /* The settings dialog header (title + close X) is reparented by our effect
-     into the nav strip; make it stick to the RIGHT edge of the scrollable nav
-     so the close X is always visible at the top-right corner (nav's look). */
-  html.${HTML_CLASS} .${SETTINGS.nav} [class*="_header"]:not([class*="_headerActions"]) {
+  /* The settings dialog's close button (X) is reparented into the nav strip by
+     our effect; make it stick to the RIGHT edge of the scrollable nav so the
+     close X is always visible at the top-right corner (nav's look). */
+  html.${HTML_CLASS} .${SETTINGS.nav} [class*="_close"] {
     position: sticky !important;
     right: 0 !important;
     margin-left: auto !important;
@@ -1691,26 +1691,28 @@ window.__ModuleLoader__.load({
       })
     }
 
-    // Move the settings dialog's header (title + close X) into its nav row so
-    // the X sits in the top nav strip — the dsh-mobile-nav
-    // "settings-toolbar-reparent" behavior. Restore on close; the dialog DOM may
-    // be rebuilt by React, so refresh the origin each time we move the header.
+    // Move ONLY the settings dialog's close button (X) into its nav row so the
+    // X sits at the top-right of the nav strip (the dsh-mobile-nav
+    // "settings-toolbar-reparent" behavior). The header's other content (e.g. the
+    // "open config file" action) stays in the body, so nothing clutters the nav.
+    // Restore on close; the dialog DOM may be rebuilt by React, so refresh the
+    // origin each time we move it.
     function installSettingsHeaderReparent() {
       let origin = null
       const reparent = () => {
         const dialog = document.querySelector('[aria-modal="true"]')
         if (!dialog) return
         const nav = dialog.querySelector(':scope > [class*="_nav"]')
-        const header = dialog.querySelector('[class*="_header"]:not([class*="_headerActions"])')
-        if (!nav || !header) return
-        if (header.parentElement === nav) return
-        if (header.parentElement) origin = { parent: header.parentElement, next: header.nextSibling }
-        nav.appendChild(header)
+        const close = dialog.querySelector('[class*="_close"]')
+        if (!nav || !close) return
+        if (close.parentElement === nav) return
+        if (close.parentElement) origin = { parent: close.parentElement, next: close.nextSibling }
+        nav.appendChild(close)
       }
       const restore = () => {
         if (!origin) return
-        const header = document.querySelector('[aria-modal="true"] [class*="_header"]:not([class*="_headerActions"])')
-        if (header && origin.parent.isConnected) origin.parent.insertBefore(header, origin.next)
+        const close = document.querySelector('[aria-modal="true"] [class*="_close"]')
+        if (close && origin.parent.isConnected) origin.parent.insertBefore(close, origin.next)
         origin = null
       }
       if (typeof document === 'undefined' || !window.MutationObserver) return
