@@ -693,56 +693,9 @@ window.__ModuleLoader__.load({
     display: none !important;
   }
 
-  /* Settings panel: desktop is an 800px two-column sheet. On phones turn it
-     full-screen single-column (stable, no drag-move, readable) so the nav
-     becomes a top strip and the content fills the viewport. */
-  html.${HTML_CLASS} .${SETTINGS.panel} {
-    width: 100vw !important;
-    max-width: 100vw !important;
-    height: 100dvh !important;
-    max-height: 100dvh !important;
-    border-radius: 0 !important;
-    flex-direction: column !important;
-  }
-  html.${HTML_CLASS} .${SETTINGS.panel} .${SETTINGS.nav} {
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    flex: none !important;
-    width: 100% !important;
-    gap: 4px !important;
-    padding: 10px 12px !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none !important;
-  }
-  /* Each nav cell stays a fixed pill so the strip scrolls horizontally. */
-  html.${HTML_CLASS} .${SETTINGS.panel} .${SETTINGS.nav} .${SETTINGS.navCell} {
-    flex: 0 0 auto !important;
-    width: auto !important;
-    white-space: nowrap !important;
-  }
-  /* navTitle + navList lay out in a single scrollable row. */
-  html.${HTML_CLASS} .${SETTINGS.panel} .${SETTINGS.nav} > div {
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    flex: 0 0 auto !important;
-    gap: 4px !important;
-  }
-  /* Hide the "设置" nav title on phones — the horizontally scrollable nav
-     cells are self-explanatory and the title wastes vertical space. */
-  html.${HTML_CLASS} .${SETTINGS.panel} .${SETTINGS.navTitle} {
-    display: none !important;
-  }
-  html.${HTML_CLASS} .${SETTINGS.panel} .${SETTINGS.content} {
-    flex: 1 1 auto !important;
-    width: 100% !important;
-    min-height: 0 !important;
-  }
-  html.${HTML_CLASS} .${SETTINGS.panel} .${SETTINGS.options} {
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch;
-  }
+  /* Settings panel: left entirely to the DSH native centered sheet on phones,
+     exactly like dsh-mobile-nav (which has no settings override). This is the
+     "centered card" look and is stable — it never gets drag-moved by us. */
 
   /* Keep iOS zoom guard */
   html.${HTML_CLASS} .${INPUT.input},
