@@ -699,9 +699,52 @@ window.__ModuleLoader__.load({
     display: none !important;
   }
 
-  /* Settings panel: left entirely to the DSH native centered sheet on phones,
-     exactly like dsh-mobile-nav (which has no settings override). This is the
-     "centered card" look and is stable — it never gets drag-moved by us. */
+  /* Settings sheet: the drawer's open state is transform:none (see above), so
+     this sheet is already centered over the full viewport. Make its nav a
+     horizontal TOP strip and the content single-column below it (the
+     dsh-mobile-nav look), instead of the desktop two-column left-nav sheet. */
+  html.${HTML_CLASS} .${SETTINGS.panel} {
+    flex-direction: column !important;
+  }
+  html.${HTML_CLASS} .${SETTINGS.panel} .${SETTINGS.nav} {
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    flex: none !important;
+    width: 100% !important;
+    gap: 4px !important;
+    padding: 10px 12px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none !important;
+  }
+  /* Each nav cell stays a fixed pill so the strip scrolls horizontally. */
+  html.${HTML_CLASS} .${SETTINGS.panel} .${SETTINGS.nav} .${SETTINGS.navCell} {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    white-space: nowrap !important;
+  }
+  /* navTitle + navList lay out in a single scrollable row. */
+  html.${HTML_CLASS} .${SETTINGS.panel} .${SETTINGS.nav} > div {
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    flex: 0 0 auto !important;
+    gap: 4px !important;
+  }
+  /* Hide the "设置" nav title on phones — the horizontally scrollable nav
+     cells are self-explanatory and the title wastes vertical space. */
+  html.${HTML_CLASS} .${SETTINGS.panel} .${SETTINGS.navTitle} {
+    display: none !important;
+  }
+  html.${HTML_CLASS} .${SETTINGS.panel} .${SETTINGS.content} {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    min-height: 0 !important;
+  }
+  html.${HTML_CLASS} .${SETTINGS.panel} .${SETTINGS.options} {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
 
   /* Keep iOS zoom guard */
   html.${HTML_CLASS} .${INPUT.input},
