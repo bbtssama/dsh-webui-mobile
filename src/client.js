@@ -457,12 +457,14 @@ window.__ModuleLoader__.load({
      The composer card is position:relative, so absolute works from here. */
   html.${HTML_CLASS} .dshMobImg {
     position: absolute !important;
-    top: 6px !important;
     right: 10px !important;
-    z-index: 4 !important;
+    bottom: calc(100% + 4px) !important; /* float ABOVE the composer card */
+    z-index: 5 !important;
     display: flex !important;
-    align-items: center !important;
+    flex-direction: column !important; /* vertical, extends upward */
+    align-items: flex-end !important;
     gap: 6px !important;
+    pointer-events: auto !important;
   }
   html.${HTML_CLASS} .dshMobImg_btn {
     width: 28px !important;
@@ -483,8 +485,9 @@ window.__ModuleLoader__.load({
     background: var(--dsw-alias-interactive-bg-hover, rgba(0,0,0,.05)) !important;
   }
   html.${HTML_CLASS} .dshMobImg_chips {
-    display: inline-flex !important;
-    align-items: center !important;
+    display: flex !important;
+    flex-direction: column !important; /* each thumbnail stacks vertically */
+    align-items: flex-end !important;
     gap: 6px !important;
   }
   html.${HTML_CLASS} .dshMobImg_chip {
@@ -1617,32 +1620,6 @@ window.__ModuleLoader__.load({
         className: 'dshMobImg',
         'data-dsh-mobile-image': true,
         children: [
-          jsx('button', {
-            type: 'button',
-            className: 'dshMobImg_btn',
-            'aria-label': '上传图片',
-            title: '上传图片',
-            onClick: pick,
-            children: jsx('svg', {
-              width: 16,
-              height: 16,
-              viewBox: '0 0 20 20',
-              'aria-hidden': true,
-              children: jsx('path', {
-                d: 'M4 3h12a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm5.5 5a1.5 1.5 0 1 0 .001 3.001A1.5 1.5 0 0 0 9.5 8ZM5 13.4l3-3a.8.8 0 0 1 1.13 0l.4.4 1.9-1.9a.8.8 0 0 1 1.13 0L15.9 13a.6.6 0 0 1 .2.4H5a.6.6 0 0 1-.2-.4Z',
-                fill: 'currentColor',
-              }),
-            }),
-          }),
-          jsx('input', {
-            ref: inputRef,
-            type: 'file',
-            accept: 'image/*',
-            multiple: true,
-            hidden: true,
-            'data-dsh-mobile-file': true,
-            onChange,
-          }),
           attachments.length > 0
             ? jsx('div', {
                 className: 'dshMobImg_chips',
@@ -1666,6 +1643,32 @@ window.__ModuleLoader__.load({
                 ),
               })
             : null,
+          jsx('input', {
+            ref: inputRef,
+            type: 'file',
+            accept: 'image/*',
+            multiple: true,
+            hidden: true,
+            'data-dsh-mobile-file': true,
+            onChange,
+          }),
+          jsx('button', {
+            type: 'button',
+            className: 'dshMobImg_btn',
+            'aria-label': '上传图片',
+            title: '上传图片',
+            onClick: pick,
+            children: jsx('svg', {
+              width: 16,
+              height: 16,
+              viewBox: '0 0 20 20',
+              'aria-hidden': true,
+              children: jsx('path', {
+                d: 'M4 3h12a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm5.5 5a1.5 1.5 0 1 0 .001 3.001A1.5 1.5 0 0 0 9.5 8ZM5 13.4l3-3a.8.8 0 0 1 1.13 0l.4.4 1.9-1.9a.8.8 0 0 1 1.13 0L15.9 13a.6.6 0 0 1 .2.4H5a.6.6 0 0 1-.2-.4Z',
+                fill: 'currentColor',
+              }),
+            }),
+          }),
         ],
       })
     }
