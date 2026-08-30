@@ -452,6 +452,73 @@ window.__ModuleLoader__.load({
     flex: none !important;
   }
 
+  /* Mobile image-upload button: pinned top-right of the composer card (above the
+     input, same side as Send), about half the 40px send button so it stays light.
+     The composer card is position:relative, so absolute works from here. */
+  html.${HTML_CLASS} .dshMobImg {
+    position: absolute !important;
+    top: 6px !important;
+    right: 10px !important;
+    z-index: 4 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+  html.${HTML_CLASS} .dshMobImg_btn {
+    width: 28px !important;
+    height: 28px !important;
+    flex: none !important;
+    border-radius: 9px !important;
+    border: 1px solid var(--dsw-alias-border-l2-darkmode-thin, rgba(0,0,0,.12)) !important;
+    background: var(--dsw-specific-input-major, var(--dsw-alias-bg-base, #fff)) !important;
+    color: var(--dsw-alias-label-secondary, inherit) !important;
+    display: grid !important;
+    place-items: center !important;
+    padding: 0 !important;
+    cursor: pointer !important;
+    box-shadow: var(--dsw-shadow-lv1, none) !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+  html.${HTML_CLASS} .dshMobImg_btn:active {
+    background: var(--dsw-alias-interactive-bg-hover, rgba(0,0,0,.05)) !important;
+  }
+  html.${HTML_CLASS} .dshMobImg_chips {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+  html.${HTML_CLASS} .dshMobImg_chip {
+    position: relative !important;
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 10px !important;
+    border: 1px solid var(--dsw-alias-border-l2-darkmode-thin, rgba(0,0,0,.12)) !important;
+    overflow: hidden !important;
+    display: inline-flex !important;
+  }
+  html.${HTML_CLASS} .dshMobImg_chip img {
+    object-fit: cover !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+  }
+  html.${HTML_CLASS} .dshMobImg_del {
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    width: 18px !important;
+    height: 18px !important;
+    border: none !important;
+    border-radius: 0 0 0 8px !important;
+    background: var(--dsw-alias-button-contrast-fill, rgba(0,0,0,.6)) !important;
+    color: var(--dsw-alias-label-primary-inverted, #fff) !important;
+    font-size: 12px !important;
+    line-height: 18px !important;
+    text-align: center !important;
+    cursor: pointer !important;
+    padding: 0 !important;
+  }
+
   /* Session header: title alone; 「模式」beside 轨迹 tabs */
   html.${HTML_CLASS} .${HDR.header} {
     display: grid !important;
@@ -1524,6 +1591,85 @@ window.__ModuleLoader__.load({
 
     const inject = ['slots', 'layout']
 
+    // Mobile image upload: a small "＋图片" button pinned to the composer card's
+    // top-right corner (above the input, same side as the send button, roughly
+    // half its size). It opens a hidden <input type=file accept="image/*"> so the
+    // native phone gallery/camera chooser appears; picked files go straight into
+    // the composer's existing, validated add-images pipeline via onAddImages.
+    // The face is registered only while mobile is active (see apply), so the
+    // desktop composer keeps the native attachment rail untouched.
+    function MobileAttachBar(props) {
+      const mobile = useMobile()
+      const inputRef = React.useRef(null)
+      const attachments = props?.attachments || []
+      const onAddImages = props?.onAddImages
+      const onRemoveImage = props?.onRemoveImage
+      const pick = React.useCallback(() => {
+        inputRef.current?.click()
+      }, [])
+      const onChange = React.useCallback((e) => {
+        const files = Array.from(e.target.files || [])
+        e.target.value = ''
+        if (files.length > 0 && typeof onAddImages === 'function') onAddImages(files)
+      }, [onAddImages])
+      if (!mobile) return null
+      return jsx('div', {
+        className: 'dshMobImg',
+        'data-dsh-mobile-image': true,
+        children: [
+          jsx('button', {
+            type: 'button',
+            className: 'dshMobImg_btn',
+            'aria-label': '上传图片',
+            title: '上传图片',
+            onClick: pick,
+            children: jsx('svg', {
+              width: 16,
+              height: 16,
+              viewBox: '0 0 20 20',
+              'aria-hidden': true,
+              children: jsx('path', {
+                d: 'M4 3h12a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm5.5 5a1.5 1.5 0 1 0 .001 3.001A1.5 1.5 0 0 0 9.5 8ZM5 13.4l3-3a.8.8 0 0 1 1.13 0l.4.4 1.9-1.9a.8.8 0 0 1 1.13 0L15.9 13a.6.6 0 0 1 .2.4H5a.6.6 0 0 1-.2-.4Z',
+                fill: 'currentColor',
+              }),
+            }),
+          }),
+          jsx('input', {
+            ref: inputRef,
+            type: 'file',
+            accept: 'image/*',
+            multiple: true,
+            hidden: true,
+            'data-dsh-mobile-file': true,
+            onChange,
+          }),
+          attachments.length > 0
+            ? jsx('div', {
+                className: 'dshMobImg_chips',
+                children: attachments.map((a) =>
+                  jsx('span', {
+                    className: 'dshMobImg_chip',
+                    key: a.id,
+                    children: [
+                      jsx('img', { src: a.previewUrl, alt: a.file?.name || '图片' }),
+                      jsx('button', {
+                        type: 'button',
+                        className: 'dshMobImg_del',
+                        'aria-label': '移除图片',
+                        onClick: () => {
+                          if (typeof onRemoveImage === 'function') onRemoveImage(a.id)
+                        },
+                        children: '\u00d7',
+                      }),
+                    ],
+                  }),
+                ),
+              })
+            : null,
+        ],
+      })
+    }
+
     function apply(ctx) {
       ensureStyle()
       ctx.effect(
@@ -1543,6 +1689,48 @@ window.__ModuleLoader__.load({
             ),
           ),
         'dsh-mobile-hanui: shell.overlay',
+      )
+      // Mobile-only image-upload affordance. The `conversation.input.attachments`
+      // slot is kind:"single", so we take it over ONLY while mobile is active and
+      // release it when it isn't — desktop keeps the native attachment rail. The
+      // face receives { attachments, onAddImages, onRemoveImage, ... } slot props.
+      ctx.effect(
+        () => {
+          if (typeof window === 'undefined' || !window.matchMedia) return
+          let disposer = null
+          const mq = window.matchMedia(MOBILE_MQ)
+          const update = () => {
+            const on = mq.matches && !shellDisabled()
+            if (on && !disposer) {
+              try {
+                disposer = ctx.slots.inject('conversation.input.attachments', () =>
+                  ctx.slots.register(
+                    {
+                      name: 'conversation.input.attachments',
+                      id: 'dsh-mobile-hanui-image',
+                      priority: -1, // lower than the native rail's 0 → shadows it (lowest renders)
+                      order: -1,
+                      label: 'Mobile image upload',
+                    },
+                    MobileAttachBar,
+                  ),
+                )
+              } catch (err) {
+                console.warn('[dsh-mobile-hanui] attachments slot', err)
+              }
+            } else if (!on && disposer) {
+              disposer()
+              disposer = null
+            }
+          }
+          update()
+          mq.addEventListener('change', update)
+          return () => {
+            mq.removeEventListener('change', update)
+            if (disposer) disposer()
+          }
+        },
+        'dsh-mobile-hanui: conversation.input.attachments',
       )
     }
 
