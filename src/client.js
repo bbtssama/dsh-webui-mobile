@@ -117,6 +117,7 @@ window.__ModuleLoader__.load({
       clearButton: 'qDHVXG_clearButton',
       iconButton: 'qDHVXG_iconButton',
       headerActions: 'qDHVXG_headerActions',
+      sessionOverflow: 'qDHVXG_sessionOverflowButton',
     }
     // Workspace sidebar session rows (div[role=treeitem], not <button>)
     const SIDEBAR_ROW = {
@@ -1419,7 +1420,11 @@ window.__ModuleLoader__.load({
           }
           // Workspace section-header controls (search view, view options, add
           // workspace) open sub-views / menus inside the drawer — keep it open.
-          if (t.closest(`.${WS_HDR.sectionHeader}, .${WS_HDR.search}, .${WS_HDR.searchButton}, .${WS_HDR.searchInput}, .${WS_HDR.clearButton}, .${WS_HDR.iconButton}`)) {
+          // The "expand remaining sessions" overflow button also belongs here:
+          // tapping it only reveals more sessions in place, so it must NOT
+          // collapse the drawer (previously the generic "actionable" branch
+          // closed it → the drawer flashed back / "返回效果").
+          if (t.closest(`.${WS_HDR.sectionHeader}, .${WS_HDR.search}, .${WS_HDR.searchButton}, .${WS_HDR.searchInput}, .${WS_HDR.clearButton}, .${WS_HDR.iconButton}, .${WS_HDR.sessionOverflow}`)) {
             return
           }
           // Session rows are div[role=treeitem].YDXeBa_sessionRow (not <button>)
