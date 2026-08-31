@@ -739,6 +739,16 @@ window.__ModuleLoader__.load({
     animation: dsh-webui-sheet-in .22s var(--ds-ease-out, ease-in-out);
   }
   /* The dimmed mask under the settings card fades in with it. */
+  /* The settings overlay portals into the drawer DOM; as position:absolute it
+     was clipped to the drawer's fixed width — the right side of every tab
+     (list badges, buttons, selectors) fell into the drawer's horizontal
+     scroll and became invisible/untappable. While the sheet is mounted the
+     drawer simply stops clipping (overflow:visible): the near-full-width
+     card then spans past the drawer over the dimmed backdrop, and every
+     control stays reachable. (:has, like the z-lift above.) */
+  html.${HTML_CLASS} .${CLS.sidebar}:has(.${SETTINGS.overlay}) {
+    overflow: visible !important;
+  }
   html.${HTML_CLASS} .${SETTINGS.overlay} {
     animation: dsh-webui-fade .18s var(--ds-ease-out, ease-in-out);
   }
@@ -789,24 +799,11 @@ window.__ModuleLoader__.load({
     margin-left: 6px !important;
     align-self: center !important;
   }
-  /* Each nav cell stays a fixed pill so the strip scrolls horizontally.
-     Compact sizing: at the 286px sheet width the desktop-sized pills (14px
-     font, 12/16 padding) push MCP+ off-screen and long labels like
-     "Agent 预设" look cramped; smaller pills keep every label readable. */
+  /* Each nav cell stays a fixed pill so the strip scrolls horizontally. */
   html.${HTML_CLASS} .${SETTINGS.panel} .${SETTINGS.nav} .${SETTINGS.navCell} {
     flex: 0 0 auto !important;
     width: auto !important;
     white-space: nowrap !important;
-    font-size: 11px !important;
-    line-height: 1 !important;
-    padding: 6px 8px !important;
-    gap: 4px !important;
-    align-items: center !important;
-  }
-  html.${HTML_CLASS} .${SETTINGS.panel} .${SETTINGS.nav} .${SETTINGS.navCell} svg {
-    width: 12px !important;
-    height: 12px !important;
-    flex: none !important;
   }
   /* Hide the "设置" nav title on phones — the horizontally scrollable nav
      cells are self-explanatory and the title wastes vertical space. */
@@ -891,14 +888,21 @@ window.__ModuleLoader__.load({
   html.${HTML_CLASS} [aria-modal="true"] [class*="_options"] [class$="_cards"] {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 8px !important;
+    grid-auto-rows: 1fr !important;
   }
   html.${HTML_CLASS} [aria-modal="true"] [class*="_options"] [class$="_cardMain"] {
     padding: 10px 10px 9px !important;
     gap: 6px !important;
   }
+  /* Uniform cards: every description clamps to the same 2 lines so all
+     preset cards share one height and the grid reads as aligned rows. */
   html.${HTML_CLASS} [aria-modal="true"] [class*="_options"] [class$="_cardDesc"] {
     font-size: 11px !important;
     line-height: 1.4 !important;
+    display: -webkit-box !important;
+    -webkit-box-orient: vertical !important;
+    -webkit-line-clamp: 2 !important;
+    overflow: hidden !important;
   }
 
   /* Keep iOS zoom guard */
@@ -2055,11 +2059,65 @@ window.__ModuleLoader__.load({
       }
     }
 
+
+    // Generic content fit for FUTURE tabs (native or plugin): if any block in
+    // the settings sheet overflows horizontally, scale the whole block down
+    // (fonts and icons shrink together via zoom) until it fits. Inert today —
+    // kicks in automatically for content that is too wide at 374px.
+    function installContentFit() {
+      if (typeof document === 'undefined' || !window.MutationObserver) return
+      let raf = 0
+      const FLOOR = 0.72
+      const fitAll = () => {
+        raf = 0
+        if (!mobileDomAllowed()) return
+        const scope = document.querySelector('[aria-modal="true"] [class*="_options"]')
+        if (!scope) return
+        // "fits" = the block's visual right edge stays inside the sheet.
+        // (scrollWidth/clientWidth both scale with zoom, so their ratio can
+        // never certify a fit — the rect check can.)
+        const limit = scope.getBoundingClientRect().right - 1
+        const targets = []
+        const handled = new Set()
+        for (const el of scope.querySelectorAll('*')) {
+          if (handled.has(el)) continue
+          const cs = getComputedStyle(el)
+          if (cs.overflowX === 'auto' || cs.overflowX === 'scroll') continue
+          const r = el.getBoundingClientRect()
+          if (r.width > 40 && r.right > limit + 1 && el.childElementCount) {
+            for (const d of el.querySelectorAll('*')) handled.add(d)
+            handled.add(el)
+            targets.push(el)
+          }
+        }
+        for (const el of targets) {
+          let z = parseFloat(el.style.zoom || '1') || 1
+          while (z > FLOOR) {
+            z = Math.max(FLOOR, +(z - 0.06).toFixed(2))
+            el.style.zoom = String(z)
+            if (el.getBoundingClientRect().right <= limit + 1) break
+          }
+          // at the floor keep the best zoom: smaller-but-readable beats cut off
+        }
+      }
+      const schedule = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; fitAll() }) }
+      const observer = new MutationObserver(schedule)
+      observer.observe(document.body, { childList: true, subtree: true })
+      window.addEventListener('resize', schedule)
+      schedule()
+      return () => {
+        observer.disconnect()
+        window.removeEventListener('resize', schedule)
+        if (raf) cancelAnimationFrame(raf)
+      }
+    }
+
     function apply(ctx) {
       ensureStyle()
       ctx.effect(installSettingsHeaderReparent, 'dsh-webui-mobile: settings-header-reparent')
       ctx.effect(installSettingsConfigRow, 'dsh-webui-mobile: settings-config-row')
       ctx.effect(installPopupZGuard, 'dsh-webui-mobile: popup-z-guard')
+      ctx.effect(installContentFit, 'dsh-webui-mobile: content-fit')
       ctx.effect(
         () =>
           ctx.slots.inject('shell.overlay', () =>
