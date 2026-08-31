@@ -2361,16 +2361,12 @@ window.__ModuleLoader__.load({
         const seg = nav && nav.querySelector(':scope > [class$="_crumbSeg"]')
         return seg ? seg.querySelector('button[class*="_crumb"]') : null
       }
-      const leftmostCrumbSeg = () => {
-        const nav = document.querySelector('[class$="_crumbs"]')
-        return nav ? nav.querySelector(':scope > [class$="_crumbSeg"]') : null
-      }
       let suppressClick = false
       const onCrumbPointerDown = (e) => {
         if (!mobileDomAllowed()) return
-        const seg = leftmostCrumbSeg()
-        if (!seg || !(e.target instanceof Element)) return
-        if (!(e.target === seg || seg.contains(e.target))) return
+        const crumb = liveMainCrumb()
+        if (!crumb || !(e.target instanceof Element)) return
+        if (!(e.target === crumb || crumb.contains(e.target))) return
         if (!revealed) {
           revealed = true
           suppressClick = true // swallow the click that follows this tap → no navigate
@@ -2390,8 +2386,8 @@ window.__ModuleLoader__.load({
       const onDocPointerDown = (e) => {
         if (!mobileDomAllowed()) return
         if (!revealed) return
-        const seg = leftmostCrumbSeg()
-        if (seg && e.target instanceof Element && (e.target === seg || seg.contains(e.target))) return
+        const crumb = liveMainCrumb()
+        if (crumb && e.target instanceof Element && (e.target === crumb || crumb.contains(e.target))) return
         revealed = false
         suppressClick = false
         schedule()
