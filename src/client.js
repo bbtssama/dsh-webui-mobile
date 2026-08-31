@@ -2201,8 +2201,10 @@ window.__ModuleLoader__.load({
       let raf = 0
       let storeUnsub = null
       let mainCrumbEl = null
-      // Two-step reveal: 1st tap shows the main crumb's real name; 2nd tap navigates.
-      let revealed = false
+      // Two-step reveal per crumb level: 1st tap shows that crumb's real name;
+      // 2nd tap runs the native click (jump to that level, or expand its children).
+      // revealedIndex = which crumbSeg is revealed (-1 = none).
+      let revealedIndex = -1
       let alive = true
       // Only true while mobile is active; drives setup/teardown of everything below.
       let mobile = false
@@ -2284,31 +2286,30 @@ window.__ModuleLoader__.load({
           return indexToLetter(children.findIndex((e) => e.id === childId))
         }
         const crumbBtn = (seg) => seg.querySelector('button[class*="_crumb"]')
+        // The element to rename/reveal on each crumb level: the main agent is a
+        // crumb button; deeper levels are switcher-title triggers ("expand own
+        // children"), which are what carry the letters.
+        const crumbElOf = (seg) => crumbBtn(seg) || seg.querySelector('[class$="_switcherTitle"]')
 
-        // Main agent crumb = the leftmost crumbSeg's label button (class contains
-        // "_crumb"; the class string may end in "_crumbCurrent"/"_crumbSubagent").
-        const mainSeg = segs[0]
-        mainCrumbEl = crumbBtn(mainSeg)
-        if (mainCrumbEl) {
-          if (!mainCrumbEl.hasAttribute(CRUMB_FULL)) {
-            mainCrumbEl.setAttribute(CRUMB_FULL, (mainCrumbEl.textContent || '').trim())
-          }
-          const full = mainCrumbEl.getAttribute(CRUMB_FULL) || ''
-          const label = revealed ? full : MAIN_LABEL
-          if (mainCrumbEl.textContent !== label) mainCrumbEl.textContent = label
-        }
-
-        // Deeper crumbs = subagents → sibling-order letter.
+        // Label every crumb level: main = 「主代理」, deeper = sibling-order letter.
+        // A revealed level shows its real name; a non-revealed one shows the label.
         segs.forEach((seg, index) => {
-          if (index === 0 || crumbBtn(seg)) return // main agent handled above
-          const titleEl = seg.querySelector('[class$="_switcherTitle"]')
-          const node = chain[index]
-          if (!titleEl || !node || node.subagent === false) return
-          const letter = letterOf(node.id, node.parentId)
-          if (letter) {
-            if (!titleEl.hasAttribute(ORIG)) titleEl.setAttribute(ORIG, titleEl.textContent)
-            if (titleEl.textContent !== letter) titleEl.textContent = letter
+          const el = crumbElOf(seg)
+          if (!el) return
+          if (!el.hasAttribute(CRUMB_FULL)) el.setAttribute(CRUMB_FULL, (el.textContent || '').trim())
+          const full = el.getAttribute(CRUMB_FULL) || ''
+          let label
+          if (index === 0) {
+            mainCrumbEl = el
+            label = revealedIndex === 0 ? full : MAIN_LABEL
+          } else {
+            const node = chain[index]
+            if (!node || node.subagent === false) return
+            const letter = letterOf(node.id, node.parentId)
+            if (!letter) return
+            label = revealedIndex === index ? full : letter
           }
+          if (el.textContent !== label) el.textContent = label
         })
 
         // Count text: "N 个子代理" → "N 子代".
@@ -2354,22 +2355,27 @@ window.__ModuleLoader__.load({
       // leftmost crumb is the current session and is disabled (a disabled button
       // never fires click, so the reveal is driven by pointerdown instead): 1st tap
       // reveals the crumb's real name (and suppresses the following click so it does
-      // not navigate); 2nd tap lets the native click navigate to that level. Tapping
-      // elsewhere reverts the reveal back to 主代理.
-      const liveMainCrumb = () => {
+      // Two-step per crumb level (works per crumb, incl. the disabled main crumb whose
+      // button never fires click): 1st tap reveals that crumb's real name and swallows
+      // the click that follows (so no jump / no children-expand yet); 2nd tap lets the
+      // native click run — jump to that level if it is an ancestor, or expand its own
+      // children if it is the current level. Tapping elsewhere reverts to the label.
+      const crumbIndex = (target) => {
+        if (!(target instanceof Element)) return -1
         const nav = document.querySelector('[class$="_crumbs"]')
-        const seg = nav && nav.querySelector(':scope > [class$="_crumbSeg"]')
-        return seg ? seg.querySelector('button[class*="_crumb"]') : null
+        if (!nav) return -1
+        const segs = Array.from(nav.querySelectorAll(':scope > [class$="_crumbSeg"]'))
+        const seg = target.closest('[class$="_crumbSeg"]')
+        return seg ? segs.indexOf(seg) : -1
       }
       let suppressClick = false
       const onCrumbPointerDown = (e) => {
         if (!mobileDomAllowed()) return
-        const crumb = liveMainCrumb()
-        if (!crumb || !(e.target instanceof Element)) return
-        if (!(e.target === crumb || crumb.contains(e.target))) return
-        if (!revealed) {
-          revealed = true
-          suppressClick = true // swallow the click that follows this tap → no navigate
+        const idx = crumbIndex(e.target)
+        if (idx < 0) return
+        if (idx !== revealedIndex) {
+          revealedIndex = idx
+          suppressClick = true // swallow the click that follows this tap → no jump/expand
           schedule()
         }
       }
@@ -2380,15 +2386,13 @@ window.__ModuleLoader__.load({
           e.preventDefault()
           e.stopPropagation()
         }
-        // Otherwise let the native click run (2nd tap navigates). On the disabled
-        // main crumb a click doesn't fire at all, so this is a no-op there.
+        // Otherwise let the native click run (2nd tap: jump / expand children).
       }
       const onDocPointerDown = (e) => {
         if (!mobileDomAllowed()) return
-        if (!revealed) return
-        const crumb = liveMainCrumb()
-        if (crumb && e.target instanceof Element && (e.target === crumb || crumb.contains(e.target))) return
-        revealed = false
+        if (revealedIndex < 0) return
+        if (crumbIndex(e.target) >= 0) return
+        revealedIndex = -1
         suppressClick = false
         schedule()
       }
@@ -2431,7 +2435,7 @@ window.__ModuleLoader__.load({
         document.removeEventListener('click', onCrumbClick, true)
         document.removeEventListener('pointerdown', onCrumbPointerDown, true)
         document.removeEventListener('pointerdown', onDocPointerDown, true)
-        revealed = false
+        revealedIndex = -1
         suppressClick = false
         mainCrumbEl = null
         restoreNative()
