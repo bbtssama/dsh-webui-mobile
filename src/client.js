@@ -2285,11 +2285,10 @@ window.__ModuleLoader__.load({
           if (children.length === 0 && byId) children = Object.values(byId).filter((s) => s.parentId === parentId && s.origin === 'subagent')
           return indexToLetter(children.findIndex((e) => e.id === childId))
         }
-        const crumbBtn = (seg) => seg.querySelector('button[class*="_crumb"]')
-        // The element to rename/reveal on each crumb level: the main agent is a
-        // crumb button; deeper levels are switcher-title triggers ("expand own
+        // The element to rename/reveal on each crumb level (crumbElOf is defined
+        // at effect scope so the click handler and applyRename agree): main agent is
+        // a crumb button; deeper levels are switcher-title triggers ("expand own
         // children"), which are what carry the letters.
-        const crumbElOf = (seg) => crumbBtn(seg) || seg.querySelector('[class$="_switcherTitle"]')
 
         // Label every crumb level: main = 「主代理」, deeper = sibling-order letter.
         // A revealed level shows its real name; a non-revealed one shows the label.
@@ -2360,13 +2359,24 @@ window.__ModuleLoader__.load({
       // the click that follows (so no jump / no children-expand yet); 2nd tap lets the
       // native click run — jump to that level if it is an ancestor, or expand its own
       // children if it is the current level. Tapping elsewhere reverts to the label.
+      // The renameable/revealable element on a crumb level: main agent is a crumb
+      // button; deeper levels are switcher-title triggers. The "N 子代" count text is
+      // NOT part of this, so tapping it keeps its native "expand the subagent list".
+      const crumbElOf = (seg) => seg.querySelector('button[class*="_crumb"]') || seg.querySelector('[class$="_switcherTitle"]')
       const crumbIndex = (target) => {
         if (!(target instanceof Element)) return -1
         const nav = document.querySelector('[class$="_crumbs"]')
         if (!nav) return -1
         const segs = Array.from(nav.querySelectorAll(':scope > [class$="_crumbSeg"]'))
         const seg = target.closest('[class$="_crumbSeg"]')
-        return seg ? segs.indexOf(seg) : -1
+        if (!seg) return -1
+        const idx = segs.indexOf(seg)
+        if (idx < 0) return -1
+        const el = crumbElOf(seg)
+        if (!el) return -1
+        // only reveal when the tap is on the crumb label itself, not the count/others
+        if (!(target === el || el.contains(target))) return -1
+        return idx
       }
       let suppressClick = false
       const onCrumbPointerDown = (e) => {
