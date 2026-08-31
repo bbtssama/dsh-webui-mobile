@@ -207,11 +207,26 @@ window.__ModuleLoader__.load({
   }
 
   /* SIDEBAR — left drawer; closed parked off-screen to the LEFT (not on center).
-     Width hugs the sidebar content (the inner root carries the desktop
-     three-column inline width, ~280px) like dsh-mobile-nav does, instead of a
-     fixed 360px slab: on phones the drawer then ends exactly where its
-     content does. The dimmed backdrop separates it from the app, so there is
-     no hard border-right edge. */
+     Width is FIXED at the workspace-loaded width (the inner root carries the
+     desktop three-column inline width, ~280px + gutters ≈ 302px). It used to
+     be max-content, which made the drawer jump when the workspace loaded and,
+     while narrow, CLIP the fixed-width settings card — its right-edge dropdown
+     selectors (Agent preset, language, …) fell outside the drawer's overflow
+     box and became untappable. The dimmed backdrop separates it from the app,
+     so there is no hard border-right edge. */
+  html.${HTML_CLASS} {
+    /* Single source of truth for the drawer width — the settings sheet
+       derives its own width from this so it can never overflow the drawer. */
+    --dsw-mob-drawer-w: 302px;
+  }
+  /* SIDEBAR — left drawer; closed parked off-screen to the LEFT (not on center).
+     Width is FIXED at the workspace-loaded width (the inner root carries the
+     desktop three-column inline width, ~280px + gutters). It used to be
+     max-content, which made the drawer jump when the workspace loaded and,
+     while narrow, CLIP the settings card — its right-edge dropdown selectors
+     (Agent preset, language, …) fell outside the drawer's overflow box and
+     became untappable. The dimmed backdrop separates it from the app, so
+     there is no hard border-right edge. */
   html.${HTML_CLASS} .${CLS.sidebar} {
     position: fixed !important;
     z-index: 50 !important;
@@ -219,7 +234,8 @@ window.__ModuleLoader__.load({
     left: 0 !important;
     right: auto !important;
     bottom: 0 !important;
-    width: max-content !important;
+    width: var(--dsw-mob-drawer-w) !important;
+    min-width: var(--dsw-mob-drawer-w) !important;
     max-width: 92vw !important;
     height: 100% !important;
     height: 100dvh !important;
