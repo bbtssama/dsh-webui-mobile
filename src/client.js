@@ -726,6 +726,16 @@ window.__ModuleLoader__.load({
   html.${HTML_CLASS} .${SETTINGS.overlay} {
     animation: dsh-webui-fade .18s var(--ds-ease-out, ease-in-out);
   }
+  /* The welcome/onboarding notice is a body-level overlay (z-index 1000),
+     while this sheet is portaled inside the drawer, whose stacking context
+     (z-index 50) caps it — so an unacknowledged notice paints over the whole
+     settings card below its tab strip. While the settings overlay is
+     mounted, lift the drawer above body-level modals; it drops back the
+     moment the overlay unmounts, so the notice itself stays clickable in the
+     normal flow. Browsers without :has() just skip the rule. */
+  html.${HTML_CLASS} .${CLS.sidebar}:has(.${SETTINGS.overlay}) {
+    z-index: 1001 !important;
+  }
   /* The nav strip is a single flex row: the scrollable tab list on the left,
      the close X pinned to the far right. The nav container itself never
      scrolls, so the X is always fully visible (no clipping) — nav's look. */
