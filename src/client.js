@@ -936,6 +936,28 @@ window.__ModuleLoader__.load({
     word-break: break-word !important;
   }
 
+  /* Header breadcrumb: nested subagents stack crumbs (创建 / agent-tea / 孙代…).
+     Keep a readable size instead of letting the row shrink the font to a sliver,
+     and let the strip scroll so every level is reachable. */
+  html.${HTML_CLASS} [class*="_crumbs"] {
+    font-size: 11.5px !important;
+    overflow-x: auto !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  html.${HTML_CLASS} [class*="_crumbs"] [class*="_crumb"],
+  html.${HTML_CLASS} [class*="_crumbs"] [class*="_crumbSeg"] {
+    white-space: nowrap !important;
+    flex: 0 0 auto !important;
+    min-width: 0 !important;
+    text-overflow: ellipsis !important;
+  }
+  /* Model / effort picker popover: never exceed the viewport, and let a long
+     model name shrink to fit the row (see the runtime shrink pass). */
+  html.${HTML_CLASS} [class*="_7KE1Ra_menu"] {
+    max-width: min(320px, calc(100vw - 24px)) !important;
+  }
+
   /* Keep iOS zoom guard */
   html.${HTML_CLASS} .${INPUT.input},
   html.${HTML_CLASS} textarea,
@@ -2139,8 +2161,21 @@ window.__ModuleLoader__.load({
         raf = 0
         if (!mobileDomAllowed()) return
         const scope = document.querySelector('[aria-modal="true"] [class*="_options"]')
+        if (scope) repairSqueeze(scope)
+        // Popover menus (model/effort picker): a long value truncates with an
+        // ellipsis; shrink its font instead so the whole name fits the row.
+        for (const menu of document.querySelectorAll('[class*="_menu"]')) {
+          if (menu.closest('[aria-modal="true"] [class*="_options"]')) continue
+          for (const leaf of menu.querySelectorAll('*')) {
+            if (leaf.childElementCount) continue
+            const cs = getComputedStyle(leaf)
+            if (cs.textOverflow !== 'ellipsis') continue
+            if (leaf.scrollWidth <= leaf.clientWidth + 1) continue
+            let fs = parseFloat(cs.fontSize)
+            while (fs > 8 && leaf.scrollWidth > leaf.clientWidth + 1) { fs -= 0.5; leaf.style.fontSize = fs + 'px' }
+          }
+        }
         if (!scope) return
-        repairSqueeze(scope)
         // "fits" = the block's visual right edge stays inside the sheet.
         // (scrollWidth/clientWidth both scale with zoom, so their ratio can
         // never certify a fit — the rect check can.)
