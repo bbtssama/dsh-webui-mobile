@@ -206,7 +206,12 @@ window.__ModuleLoader__.load({
     grid-row: 1 !important;
   }
 
-  /* SIDEBAR — left drawer; closed parked off-screen to the LEFT (not on center) */
+  /* SIDEBAR — left drawer; closed parked off-screen to the LEFT (not on center).
+     Width hugs the sidebar content (the inner root carries the desktop
+     three-column inline width, ~280px) like dsh-mobile-nav does, instead of a
+     fixed 360px slab: on phones the drawer then ends exactly where its
+     content does. The dimmed backdrop separates it from the app, so there is
+     no hard border-right edge. */
   html.${HTML_CLASS} .${CLS.sidebar} {
     position: fixed !important;
     z-index: 50 !important;
@@ -214,8 +219,8 @@ window.__ModuleLoader__.load({
     left: 0 !important;
     right: auto !important;
     bottom: 0 !important;
-    width: min(100%, 360px) !important;
-    max-width: 100% !important;
+    width: max-content !important;
+    max-width: 92vw !important;
     height: 100% !important;
     height: 100dvh !important;
     margin: 0 !important;
@@ -224,7 +229,6 @@ window.__ModuleLoader__.load({
     padding-bottom: env(safe-area-inset-bottom, 0px);
     background: var(--dsw-specific-sidebar-fill, var(--dsw-alias-bg-base, #fff)) !important;
     border: none !important;
-    border-right: 1px solid var(--dsw-alias-border-l2, rgba(0,0,0,.08)) !important;
     overflow: auto !important;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
@@ -701,11 +705,26 @@ window.__ModuleLoader__.load({
   }
 
   /* Settings sheet: the drawer's open state is transform:none (see above), so
-     this sheet is already centered over the full viewport. Make its nav a
-     horizontal TOP strip and the content single-column below it (the
-     dsh-mobile-nav look), instead of the desktop two-column left-nav sheet. */
+     this overlay is viewport-anchored and the panel can be pinned to it.
+     Match the dsh-mobile-nav look: a near-full-width rounded CARD pinned
+     below the status bar (safe-area aware), height following its content and
+     capped to the viewport, with a slide+rise+fade entrance — instead of the
+     desktop two-column left-nav sheet snapped to a small centered box. */
   html.${HTML_CLASS} .${SETTINGS.panel} {
+    position: absolute !important;
+    left: 8px !important;
+    top: calc(env(safe-area-inset-top, 0px) + 12px) !important;
+    width: calc(100vw - 16px) !important;
+    max-width: calc(100vw - 16px) !important;
+    height: auto !important;
+    max-height: min(800px, calc(100dvh - 24px - env(safe-area-inset-top, 0px))) !important;
     flex-direction: column !important;
+    border-radius: 14px !important;
+    animation: dsh-webui-sheet-in .22s var(--ds-ease-out, ease-in-out);
+  }
+  /* The dimmed mask under the settings card fades in with it. */
+  html.${HTML_CLASS} .${SETTINGS.overlay} {
+    animation: dsh-webui-fade .18s var(--ds-ease-out, ease-in-out);
   }
   /* The nav strip is a single flex row: the scrollable tab list on the left,
      the close X pinned to the far right. The nav container itself never
@@ -827,6 +846,30 @@ window.__ModuleLoader__.load({
   }
   .dshMobBackdrop[data-visible="true"] {
     display: block;
+  }
+}
+
+/* Settings card entrance (mobile): fade + slight rise/scale, so the dialog
+   reads as a sheet instead of snapping in (the official dialog mounts with
+   no animation at all). */
+@keyframes dsh-webui-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes dsh-webui-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html.${HTML_CLASS} .${SETTINGS.panel},
+  html.${HTML_CLASS} .${SETTINGS.overlay} {
+    animation: none !important;
   }
 }
 `
