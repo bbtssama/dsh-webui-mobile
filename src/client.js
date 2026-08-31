@@ -140,6 +140,7 @@ window.__ModuleLoader__.load({
       overlay: 'VOzbGW_overlay',
       panel: 'VOzbGW_panel',
       nav: 'VOzbGW_nav',
+      navList: 'VOzbGW_navList',
       navCell: 'VOzbGW_navCell',
       navTitle: 'VOzbGW_navTitle',
       content: 'VOzbGW_content',
@@ -706,40 +707,48 @@ window.__ModuleLoader__.load({
   html.${HTML_CLASS} .${SETTINGS.panel} {
     flex-direction: column !important;
   }
+  /* The nav strip is a single flex row: the scrollable tab list on the left,
+     the close X pinned to the far right. The nav container itself never
+     scrolls, so the X is always fully visible (no clipping) — nav's look. */
   html.${HTML_CLASS} .${SETTINGS.panel} .${SETTINGS.nav} {
+    display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
+    align-items: center !important;
     flex: none !important;
     width: 100% !important;
     gap: 4px !important;
-    padding: 10px 12px !important;
+    padding: 8px 10px !important;
+    overflow: hidden !important;
+  }
+  /* The tab list is the ONLY scrollable region; it takes the remaining width. */
+  html.${HTML_CLASS} .${SETTINGS.panel} .${SETTINGS.navList} {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 4px !important;
     overflow-x: auto !important;
     overflow-y: hidden !important;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none !important;
   }
   /* The settings dialog's close button (X) is reparented into the nav strip by
-     our effect; make it stick to the RIGHT edge of the scrollable nav so the
-     close X is always visible at the top-right corner (nav's look). */
+     our effect; pin it to the RIGHT edge (after the scrollable tab list) so it
+     is always visible at the top-right corner, never clipped. */
   html.${HTML_CLASS} .${SETTINGS.nav} [class*="_close"] {
-    position: sticky !important;
-    right: 0 !important;
-    margin-left: auto !important;
+    position: static !important;
+    right: auto !important;
     flex: none !important;
-    background: var(--dsw-alias-bg-base, #fff) !important;
+    margin-left: 6px !important;
+    align-self: center !important;
   }
   /* Each nav cell stays a fixed pill so the strip scrolls horizontally. */
   html.${HTML_CLASS} .${SETTINGS.panel} .${SETTINGS.nav} .${SETTINGS.navCell} {
     flex: 0 0 auto !important;
     width: auto !important;
     white-space: nowrap !important;
-  }
-  /* navTitle + navList lay out in a single scrollable row. */
-  html.${HTML_CLASS} .${SETTINGS.panel} .${SETTINGS.nav} > div {
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    flex: 0 0 auto !important;
-    gap: 4px !important;
   }
   /* Hide the "设置" nav title on phones — the horizontally scrollable nav
      cells are self-explanatory and the title wastes vertical space. */
