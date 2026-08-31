@@ -2180,8 +2180,252 @@ window.__ModuleLoader__.load({
       }
     }
 
+    // R1 — subagent breadcrumb: single-letter naming per level (display-only, MOBILE ONLY).
+    // The breadcrumb nav is [class$="_crumbs"], its children [class$="_crumbSeg"]
+    // in root→leaf order. The LEFTMOST crumb is the main agent: default label
+    // 主代理, tap → expand to the session's real name, tap again / blur elsewhere → restore.
+    // Every deeper crumb is a subagent and gets its sibling-order letter (A, B, C…)
+    // computed from the session store's per-parent child catalog (creation order).
+    // The "N 个子代理" count becomes "N 子代".
+    //
+    // STRICT mobile gate: all DOM mutation, event listeners, observers and the session
+    // subscription are installed ONLY while mobileDomAllowed() is true (viewport ≤1023px).
+    // When the viewport leaves mobile (or on teardown) everything is unregistered and the
+    // crumb DOM is restored to its native state, so the desktop breadcrumb stays native and
+    // the crumb keeps its native click-to-navigate behavior.
+    function installSubagentCrumbRename(getSessions) {
+      if (typeof document === 'undefined' || !window.MutationObserver) return undefined
+      const MAIN_LABEL = '主代理'
+      const CRUMB_FULL = 'data-dsh-crumb-full'
+      const ORIG = 'data-dsh-crumb-orig'
+      let raf = 0
+      let storeUnsub = null
+      let mainCrumbEl = null
+      let alive = true
+      // Only true while mobile is active; drives setup/teardown of everything below.
+      let mobile = false
+      let navObs = null
+      let navObsTarget = null
+      let bodyObs = null
+      let mql = null
+
+      const indexToLetter = (n) => (Number.isInteger(n) && n >= 0 ? String.fromCharCode(65 + (n % 26)) : '')
+
+      // Restore every mobile mutation back to the native crumb DOM. Idempotent and safe to
+      // call for a nav that is absent (no-op) or already native. Runs when leaving mobile.
+      const restoreNative = () => {
+        const nav = document.querySelector('[class$="_crumbs"]')
+        if (!nav) return
+        for (const btn of nav.querySelectorAll('button[class*="_crumb"]')) {
+          const full = btn.getAttribute(CRUMB_FULL)
+          if (full) btn.textContent = full
+          btn.removeAttribute(CRUMB_FULL)
+          btn.removeAttribute(ORIG)
+        }
+        for (const el of nav.querySelectorAll('[class$="_switcherTitle"]')) {
+          const orig = el.getAttribute(ORIG)
+          if (orig) el.textContent = orig
+          el.removeAttribute(ORIG)
+        }
+        for (const el of nav.querySelectorAll('span')) {
+          if (el.childElementCount) continue
+          const orig = el.getAttribute(ORIG)
+          if (orig) {
+            el.textContent = orig
+            el.removeAttribute(ORIG)
+          }
+        }
+      }
+
+      const applyRename = () => {
+        raf = 0
+        if (!alive) return
+        if (!mobileDomAllowed()) {
+          restoreNative()
+          return
+        }
+        const nav = document.querySelector('[class$="_crumbs"]')
+        if (!nav) return
+        const sessions = getSessions && getSessions()
+        const snap = sessions && sessions.list && sessions.list.getSnapshot
+          ? sessions.list.getSnapshot()
+          : null
+        const byId = snap && snap.byId
+        const subByParent = snap && snap.subagentsByParent
+        // Rebuild the ancestry path the same way the crumb nav does: walk upward
+        // from the current session to the first non-subagent (the main agent), then
+        // unshift so the result is root→leaf, matching the crumbSeg DOM order.
+        const chain = []
+        if (byId && snap.current !== void 0) {
+          let cur = snap.current
+          const seen = new Set()
+          while (cur !== void 0 && !seen.has(cur) && byId[cur]) {
+            seen.add(cur)
+            const s = byId[cur]
+            chain.unshift({ id: s.id, displayTitle: s.displayTitle, parentId: s.parentId, subagent: s.origin === 'subagent' })
+            if (s.origin !== 'subagent') break
+            cur = s.parentId
+          }
+        }
+        const segs = Array.from(nav.querySelectorAll(':scope > [class$="_crumbSeg"]'))
+        if (segs.length === 0) return
+        // Only apply the single-letter scheme to a real subagent lineage; a plain
+        // session's breadcrumb (no count/switcher, single crumb) stays native.
+        const hasSubagent = segs.length > 1 || !!nav.querySelector('[class$="_trigger"], [class$="_switcherTrigger"]')
+        if (!hasSubagent) return
+
+        const letterOf = (childId, parentId) => {
+          if (!subByParent || parentId === void 0 || !childId) return ''
+          const cat = subByParent[parentId]
+          let children = cat && Array.isArray(cat.entries) ? cat.entries.filter((e) => e.kind === 'child') : []
+          if (children.length === 0 && byId) children = Object.values(byId).filter((s) => s.parentId === parentId && s.origin === 'subagent')
+          return indexToLetter(children.findIndex((e) => e.id === childId))
+        }
+        const crumbBtn = (seg) => seg.querySelector('button[class*="_crumb"]')
+
+        // Main agent crumb = the leftmost crumbSeg's label button (class contains
+        // "_crumb"; the class string may end in "_crumbCurrent"/"_crumbSubagent").
+        const mainSeg = segs[0]
+        mainCrumbEl = crumbBtn(mainSeg)
+        if (mainCrumbEl) {
+          if (!mainCrumbEl.hasAttribute(CRUMB_FULL)) {
+            mainCrumbEl.setAttribute(CRUMB_FULL, (mainCrumbEl.textContent || '').trim())
+          }
+          const full = mainCrumbEl.getAttribute(CRUMB_FULL) || ''
+          const label = MAIN_LABEL
+          if (mainCrumbEl.textContent !== label) mainCrumbEl.textContent = label
+        }
+
+        // Deeper crumbs = subagents → sibling-order letter.
+        segs.forEach((seg, index) => {
+          if (index === 0 || crumbBtn(seg)) return // main agent handled above
+          const titleEl = seg.querySelector('[class$="_switcherTitle"]')
+          const node = chain[index]
+          if (!titleEl || !node || node.subagent === false) return
+          const letter = letterOf(node.id, node.parentId)
+          if (letter) {
+            if (!titleEl.hasAttribute(ORIG)) titleEl.setAttribute(ORIG, titleEl.textContent)
+            if (titleEl.textContent !== letter) titleEl.textContent = letter
+          }
+        })
+
+        // Count text: "N 个子代理" → "N 子代".
+        for (const el of nav.querySelectorAll('span')) {
+          if (el.childElementCount) continue
+          const m = /^(\d+)\s*个子代理$/.exec((el.textContent || '').trim())
+          if (m) {
+            const want = `${m[1]} 子代`
+            if (!el.hasAttribute(ORIG)) el.setAttribute(ORIG, el.textContent)
+            if (el.textContent.trim() !== want) el.textContent = want
+          }
+        }
+      }
+
+      const schedule = () => {
+        if (!alive || !mobile) return
+        if (raf) return
+        raf = requestAnimationFrame(() => {
+          try {
+            ensureNavObserver()
+            applyRename()
+          } catch (_) {
+            raf = 0
+          }
+        })
+      }
+
+      const ensureNavObserver = () => {
+        const nav = document.querySelector('[class$="_crumbs"]')
+        if (nav && nav !== navObsTarget) {
+          navObs?.disconnect()
+          navObs = new MutationObserver(schedule)
+          navObs.observe(nav, { childList: true, subtree: true, characterData: true })
+          navObsTarget = nav
+        } else if (!nav && navObs) {
+          navObs.disconnect()
+          navObs = null
+          navObsTarget = null
+        }
+      }
+
+      // Install every mobile-only side effect. Called only when the viewport is mobile.
+      const setupMobile = () => {
+        const sessions = getSessions && getSessions()
+        if (sessions && sessions.list && typeof sessions.list.subscribe === 'function' && !storeUnsub) {
+          storeUnsub = sessions.list.subscribe(schedule)
+        }
+        if (!bodyObs) bodyObs = new MutationObserver(schedule)
+        bodyObs.observe(document.body, { childList: true, subtree: true })
+        ensureNavObserver()
+        schedule()
+      }
+
+      // Uninstall every mobile-only side effect and restore the native crumb DOM. Called
+      // when the viewport leaves mobile, and on teardown. Desktop never sees mobile code.
+      const teardownMobile = () => {
+        if (storeUnsub) {
+          storeUnsub()
+          storeUnsub = null
+        }
+        if (navObs) {
+          navObs.disconnect()
+          navObs = null
+          navObsTarget = null
+        }
+        if (bodyObs) {
+          bodyObs.disconnect()
+          bodyObs = null
+        }
+        if (raf) {
+          cancelAnimationFrame(raf)
+          raf = 0
+        }
+        mainCrumbEl = null
+        restoreNative()
+      }
+
+      // Toggle the whole effect on/off at the mobile breakpoint.
+      const onMq = () => {
+        const next = mobileDomAllowed()
+        if (next === mobile) return
+        mobile = next
+        if (mobile) setupMobile()
+        else teardownMobile()
+      }
+
+      try {
+        if (window.matchMedia) {
+          mql = window.matchMedia(MOBILE_MQ)
+          if (mql.addEventListener) mql.addEventListener('change', onMq)
+          else if (mql.addListener) mql.addListener(onMq)
+        }
+      } catch (_) {}
+      onMq()
+
+      return () => {
+        alive = false
+        teardownMobile()
+        try {
+          if (mql) {
+            if (mql.removeEventListener) mql.removeEventListener('change', onMq)
+            else if (mql.removeListener) mql.removeListener(onMq)
+          }
+        } catch (_) {}
+      }
+    }
+
     function apply(ctx) {
       ensureStyle()
+      ctx.effect(
+        () => installSubagentCrumbRename(() => {
+          try {
+            return ctx.get?.('sessions') ?? null
+          } catch (_) {
+            return null
+          }
+        }),
+        'dsh-webui-mobile: subagent-crumb-rename',
+      )
       ctx.effect(installSettingsHeaderReparent, 'dsh-webui-mobile: settings-header-reparent')
       ctx.effect(installSettingsConfigRow, 'dsh-webui-mobile: settings-config-row')
       ctx.effect(installPopupZGuard, 'dsh-webui-mobile: popup-z-guard')
