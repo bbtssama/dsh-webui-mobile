@@ -2350,34 +2350,50 @@ window.__ModuleLoader__.load({
         }
       }
 
-      // Two-step crumb click: 1st tap reveals the main crumb's real name (no
-      // navigation); 2nd tap lets the native click navigation run (jump to that
-      // level). Clicking elsewhere reverts the reveal back to 主代理.
+      // Two-step crumb interaction that also works on the MAIN-AGENT page where the
+      // leftmost crumb is the current session and is disabled (a disabled button
+      // never fires click, so the reveal is driven by pointerdown instead): 1st tap
+      // reveals the crumb's real name (and suppresses the following click so it does
+      // not navigate); 2nd tap lets the native click navigate to that level. Tapping
+      // elsewhere reverts the reveal back to 主代理.
       const liveMainCrumb = () => {
         const nav = document.querySelector('[class$="_crumbs"]')
         const seg = nav && nav.querySelector(':scope > [class$="_crumbSeg"]')
         return seg ? seg.querySelector('button[class*="_crumb"]') : null
       }
-      const onCrumbClick = (e) => {
+      const leftmostCrumbSeg = () => {
+        const nav = document.querySelector('[class$="_crumbs"]')
+        return nav ? nav.querySelector(':scope > [class$="_crumbSeg"]') : null
+      }
+      let suppressClick = false
+      const onCrumbPointerDown = (e) => {
         if (!mobileDomAllowed()) return
-        const crumb = liveMainCrumb()
-        if (!crumb || !(e.target instanceof Element)) return
-        if (!(e.target === crumb || crumb.contains(e.target))) return
+        const seg = leftmostCrumbSeg()
+        if (!seg || !(e.target instanceof Element)) return
+        if (!(e.target === seg || seg.contains(e.target))) return
         if (!revealed) {
-          // First tap: reveal the real name, do not navigate yet.
-          e.preventDefault()
-          e.stopPropagation()
           revealed = true
+          suppressClick = true // swallow the click that follows this tap → no navigate
           schedule()
         }
-        // When already revealed, do nothing — the native click navigates.
+      }
+      const onCrumbClick = (e) => {
+        if (!mobileDomAllowed()) return
+        if (suppressClick) {
+          suppressClick = false
+          e.preventDefault()
+          e.stopPropagation()
+        }
+        // Otherwise let the native click run (2nd tap navigates). On the disabled
+        // main crumb a click doesn't fire at all, so this is a no-op there.
       }
       const onDocPointerDown = (e) => {
         if (!mobileDomAllowed()) return
         if (!revealed) return
-        const crumb = liveMainCrumb()
-        if (crumb && e.target instanceof Element && (e.target === crumb || crumb.contains(e.target))) return
+        const seg = leftmostCrumbSeg()
+        if (seg && e.target instanceof Element && (e.target === seg || seg.contains(e.target))) return
         revealed = false
+        suppressClick = false
         schedule()
       }
 
@@ -2391,6 +2407,7 @@ window.__ModuleLoader__.load({
         bodyObs.observe(document.body, { childList: true, subtree: true })
         ensureNavObserver()
         document.addEventListener('click', onCrumbClick, true)
+        document.addEventListener('pointerdown', onCrumbPointerDown, true)
         document.addEventListener('pointerdown', onDocPointerDown, true)
         schedule()
       }
@@ -2416,8 +2433,10 @@ window.__ModuleLoader__.load({
           raf = 0
         }
         document.removeEventListener('click', onCrumbClick, true)
+        document.removeEventListener('pointerdown', onCrumbPointerDown, true)
         document.removeEventListener('pointerdown', onDocPointerDown, true)
         revealed = false
+        suppressClick = false
         mainCrumbEl = null
         restoreNative()
       }
