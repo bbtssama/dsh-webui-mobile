@@ -2079,15 +2079,28 @@ window.__ModuleLoader__.load({
           if (text.length <= 1) continue
           const r = leaf.getBoundingClientRect()
           const fs = parseFloat(getComputedStyle(leaf).fontSize) || 14
+          const cs = getComputedStyle(leaf)
           const crushedVertical = r.width < fs * 2 && r.height > fs * 2.2
-          const crushedFlat = leaf.scrollWidth > leaf.clientWidth + 1 && r.width < MIN_TEXT_W
-          if (!crushedVertical && !crushedFlat) continue
-          const row = leaf.parentElement
+          // actively cut flat: hard-sliver, or ellipsis showing fewer than
+          // ~5 characters' worth — "incl..." is as dead as "i"
+          const cutFlat = leaf.scrollWidth > leaf.clientWidth + 1 && (r.width < MIN_TEXT_W ||
+            (cs.textOverflow === 'ellipsis' && r.width < fs * 5))
+          if (!crushedVertical && !cutFlat) continue
+          // climb to the nearest non-wrapping flex/grid row (max 4 hops)
+          let row = leaf.parentElement, hops = 0
+          while (row && row !== scope && hops < 4) {
+            const rcs = getComputedStyle(row)
+            if ((rcs.display.includes('flex') || rcs.display === 'grid') && rcs.flexWrap !== 'wrap') break
+            row = row.parentElement; hops++
+          }
           if (!row || row === scope) continue
           const rcs = getComputedStyle(row)
           if (!(rcs.display.includes('flex') || rcs.display === 'grid')) continue
-          if (rcs.flexWrap !== 'wrap') row.style.flexWrap = 'wrap'
-          if (leaf.style.flex !== '1 1 100%') leaf.style.flex = '1 1 100%'
+          row.style.flexWrap = 'wrap'
+          // every wrapper between the row and the leaf takes a full line, so
+          // the text lands on a line of its own and the meta falls below
+          let node = leaf
+          while (node !== row) { node.style.flex = '1 1 100%'; node = node.parentElement }
           if (getComputedStyle(leaf).whiteSpace === 'nowrap') leaf.style.whiteSpace = 'normal'
         }
       }
