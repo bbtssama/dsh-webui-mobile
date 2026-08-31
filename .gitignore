@@ -1,3 +1,7 @@
 node_modules/
 *.log
 .DS_Store
+
+# captain/agent scratch tool scripts (not part of the plugin)
+open-*.mjs
+dsh-webui-mobile-DOM-report*.md
