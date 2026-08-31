@@ -855,6 +855,22 @@ window.__ModuleLoader__.load({
     padding-left: 9px !important;
     padding-right: 9px !important;
   }
+  /* Agent 预设 tab: the preset cards collapse to ONE full-width column on
+     phones (single grid track = content width, ~177px tall each). Desktop
+     shows them two per row — keep that here too, with tighter padding and
+     smaller desc text so two fit a 390px card. */
+  html.${HTML_CLASS} [aria-modal="true"] [class*="_options"] [class$="_cards"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+  html.${HTML_CLASS} [aria-modal="true"] [class*="_options"] [class$="_cardMain"] {
+    padding: 10px 10px 9px !important;
+    gap: 6px !important;
+  }
+  html.${HTML_CLASS} [aria-modal="true"] [class*="_options"] [class$="_cardDesc"] {
+    font-size: 11px !important;
+    line-height: 1.4 !important;
+  }
 
   /* Keep iOS zoom guard */
   html.${HTML_CLASS} .${INPUT.input},
@@ -1954,10 +1970,67 @@ window.__ModuleLoader__.load({
       }
     }
 
+    // v0.3.4 lifts the drawer above the body-level onboarding notice while the
+    // settings overlay is open (a :has() rule pinning z-index to 1001). But
+    // select/popup menus portal to the BODY as well, and on some DSH builds
+    // their stacking layer sits BELOW 1001 — the lifted card then swallows the
+    // menu and the control reads as dead on touch devices. While a body-level
+    // portal popup is open, drop the drawer back to its base layer so the
+    // popup always paints above it, whatever layer the host build uses.
+    function installPopupZGuard() {
+      if (typeof document === 'undefined' || !window.MutationObserver) return
+      let lifted = false
+      const release = () => {
+        const drawer = document.querySelector('.' + CLS.sidebar)
+        if (drawer && lifted) drawer.style.removeProperty('z-index')
+        lifted = false
+      }
+      const update = () => {
+        if (!mobileDomAllowed()) {
+          release()
+          return
+        }
+        if (!document.querySelector('[aria-modal="true"]')) {
+          release()
+          return
+        }
+        // Any body-level portal (popup menus portal outside the drawer)?
+        let popupOpen = false
+        for (const el of document.body.children) {
+          if (el.id || el.tagName === 'SCRIPT') continue
+          if (/_portal_/.test(String(el.className || ''))) {
+            popupOpen = true
+            break
+          }
+        }
+        const drawer = document.querySelector('.' + CLS.sidebar)
+        if (!drawer) return
+        if (popupOpen) {
+          if (!lifted) {
+            // The :has() lift rule is !important, so a plain inline value
+            // loses the cascade — only an inline !important beats it.
+            drawer.style.setProperty('z-index', '50', 'important')
+            lifted = true
+          }
+        } else if (lifted) {
+          drawer.style.removeProperty('z-index')
+          lifted = false
+        }
+      }
+      const observer = new MutationObserver(update)
+      observer.observe(document.body, { childList: true, subtree: false })
+      update()
+      return () => {
+        observer.disconnect()
+        release()
+      }
+    }
+
     function apply(ctx) {
       ensureStyle()
       ctx.effect(installSettingsHeaderReparent, 'dsh-webui-mobile: settings-header-reparent')
       ctx.effect(installSettingsConfigRow, 'dsh-webui-mobile: settings-config-row')
+      ctx.effect(installPopupZGuard, 'dsh-webui-mobile: popup-z-guard')
       ctx.effect(
         () =>
           ctx.slots.inject('shell.overlay', () =>
