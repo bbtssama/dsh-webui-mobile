@@ -888,7 +888,6 @@ window.__ModuleLoader__.load({
   html.${HTML_CLASS} [aria-modal="true"] [class*="_options"] [class$="_cards"] {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 8px !important;
-    grid-auto-rows: 1fr !important;
   }
   html.${HTML_CLASS} [aria-modal="true"] [class*="_options"] [class$="_cardMain"] {
     padding: 10px 10px 9px !important;
@@ -903,6 +902,24 @@ window.__ModuleLoader__.load({
     -webkit-box-orient: vertical !important;
     -webkit-line-clamp: 2 !important;
     overflow: hidden !important;
+  }
+
+  /* Expanded cards (a details block mounted inside) take the whole grid row:
+     their monospace detail content is unreadable inside one 155px column.
+     Other rows keep their natural height. */
+  html.${HTML_CLASS} [aria-modal="true"] [class$="_cards"] > [class$="_card"]:has([class*="_cardDetails"]) {
+    grid-column: 1 / -1 !important;
+  }
+  html.${HTML_CLASS} [aria-modal="true"] [class$="_cardDetails"] {
+    max-height: 260px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  html.${HTML_CLASS} [aria-modal="true"] [class$="_cardDetails"] [class*="_content"],
+  html.${HTML_CLASS} [aria-modal="true"] [class$="_cardDetails"] pre,
+  html.${HTML_CLASS} [aria-modal="true"] [class$="_cardDetails"] code {
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
   }
 
   /* Keep iOS zoom guard */
