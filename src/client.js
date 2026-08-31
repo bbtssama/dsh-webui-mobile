@@ -794,6 +794,68 @@ window.__ModuleLoader__.load({
     -webkit-overflow-scrolling: touch;
   }
 
+  /* The "open config file" header band sits above the tab content and eats a
+     full-width 54px row on phones; the action belongs in the General settings
+     list instead (see the config-row effect). Hide the band on mobile. */
+  html.${HTML_CLASS} .${SETTINGS.content} > [class*="_header"]:not([class*="_actions"]) {
+    display: none !important;
+  }
+  /* The relocated "open config file" action, injected as the last row of the
+     General settings list; clicking it just clicks the hidden original. */
+  html.${HTML_CLASS} .dshMobCfgRow {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    padding: 13px 2px !important;
+    border-top: 1px solid var(--dsw-alias-border-l2, rgba(0,0,0,.08)) !important;
+    font-size: 14px !important;
+    color: var(--dsw-alias-label-primary, #0f1115) !important;
+    cursor: pointer !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+  html.${HTML_CLASS} .dshMobCfgRow:active {
+    opacity: .55;
+  }
+  html.${HTML_CLASS} .dshMobCfgRow .dshMobCfgRowChev {
+    color: var(--dsw-alias-label-tertiary, #9aa0a8);
+    font-size: 18px;
+    line-height: 1;
+  }
+  /* Appearance (浅色/深色/跟随系统): the desktop control is one horizontal row
+     of three equal cubes, but each cube's flex-basis (180px) exceeds half the
+     390px row, so they wrapped onto separate lines. Keep them side by side. */
+  html.${HTML_CLASS} [aria-modal="true"] [class*="_cubeRow"] {
+    flex-wrap: nowrap !important;
+  }
+  html.${HTML_CLASS} [aria-modal="true"] [class*="_themeCube"] {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+  }
+  /* Compact vertical rhythm: on desktop every settings row carries 16px
+     top+bottom padding (32px per row), and the theme cubes 20px — on a phone
+     that doubles the list height for no benefit. Tighten, mobile only.
+     [class$="_row"] so "_rowText"/"_rowDesc" etc. are NOT matched. */
+  html.${HTML_CLASS} [aria-modal="true"] [class*="_options"] [class$="_row"],
+  html.${HTML_CLASS} [aria-modal="true"] [class*="_options"] [class$="_group"] {
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+  }
+  /* Session log header button: keep only the download icon on phones — the
+     "Session log" label eats ~80px of the narrow top bar. The native button
+     carries min-width:111px for the label, so drop that too. Desktop keeps
+     the full labeled button. */
+  html.${HTML_CLASS} [class*="_sessionLogButton"] > span {
+    display: none !important;
+  }
+  html.${HTML_CLASS} [class*="_sessionLogButton"] {
+    min-width: 0 !important;
+    padding-left: 9px !important;
+    padding-right: 9px !important;
+  }
+
   /* Keep iOS zoom guard */
   html.${HTML_CLASS} .${INPUT.input},
   html.${HTML_CLASS} textarea,
@@ -1753,15 +1815,34 @@ window.__ModuleLoader__.load({
       })
     }
 
+    // Shared guard for every DOM-level side effect: the plugin may only touch
+    // the page while the phone layout is actually active (and not disabled via
+    // ?mobileShell=0). Desktop must keep the native DSH DOM completely
+    // untouched — CSS alone is not enough, because DOM rearrangement effects
+    // registered at plugin level run in every viewport.
+    function mobileDomAllowed() {
+      try {
+        if (typeof window === 'undefined' || !window.matchMedia) return false
+        return window.matchMedia(MOBILE_MQ).matches && !shellDisabled()
+      } catch (_) {
+        return false
+      }
+    }
+
     // Move ONLY the settings dialog's close button (X) into its nav row so the
     // X sits at the top-right of the nav strip (the dsh-mobile-nav
     // "settings-toolbar-reparent" behavior). The header's other content (e.g. the
     // "open config file" action) stays in the body, so nothing clutters the nav.
     // Restore on close; the dialog DOM may be rebuilt by React, so refresh the
-    // origin each time we move it.
+    // origin each time we move it. Guarded by mobileDomAllowed(): on desktop the
+    // observer only ever restores, so the native two-column dialog keeps its X.
     function installSettingsHeaderReparent() {
       let origin = null
       const reparent = () => {
+        if (!mobileDomAllowed()) {
+          restore()
+          return
+        }
         const dialog = document.querySelector('[aria-modal="true"]')
         if (!dialog) return
         const nav = dialog.querySelector(':scope > [class*="_nav"]')
@@ -1783,15 +1864,100 @@ window.__ModuleLoader__.load({
         else restore()
       })
       observer.observe(document.body, { childList: true, subtree: true })
+      // Crossing the breakpoint while a dialog is open must undo/redo the move.
+      let mql = null
+      const onMq = () => reparent()
+      try {
+        if (window.matchMedia) {
+          mql = window.matchMedia(MOBILE_MQ)
+          if (mql.addEventListener) mql.addEventListener('change', onMq)
+          else if (mql.addListener) mql.addListener(onMq)
+        }
+      } catch (_) {}
       return () => {
         observer.disconnect()
+        try {
+          if (mql) {
+            if (mql.removeEventListener) mql.removeEventListener('change', onMq)
+            else if (mql.removeListener) mql.removeListener(onMq)
+          }
+        } catch (_) {}
         restore()
+      }
+    }
+
+    // The "open config file" header band above the tab content is hidden on
+    // mobile (CSS); this effect injects a compact row at the end of the
+    // General settings list that simply clicks the hidden original button, so
+    // the action lives inside General settings instead of eating a full-width
+    // band under the nav strip. Same mobile guard as the reparent effect.
+    function installSettingsConfigRow() {
+      if (typeof document === 'undefined' || !window.MutationObserver) return
+      let row = null
+      const disposeRow = () => {
+        if (row && row.isConnected) row.remove()
+        row = null
+      }
+      const ensureRow = () => {
+        if (!mobileDomAllowed()) {
+          disposeRow()
+          return
+        }
+        const dialog = document.querySelector('[aria-modal="true"]')
+        if (!dialog) {
+          disposeRow()
+          return
+        }
+        const options = dialog.querySelector('[class*="_options"]')
+        // Only the General settings tab is a natural home for the action.
+        if (!options || !/外观/.test(options.textContent || '')) {
+          disposeRow()
+          return
+        }
+        if (row && row.parentElement === options) return
+        const original = dialog.querySelector('[class*="_header"] button')
+        if (!original) return
+        disposeRow()
+        row = document.createElement('div')
+        row.className = 'dshMobCfgRow'
+        row.setAttribute('role', 'button')
+        const label = document.createElement('span')
+        label.textContent = '打开配置文件'
+        const chev = document.createElement('span')
+        chev.className = 'dshMobCfgRowChev'
+        chev.textContent = '›'
+        row.appendChild(label)
+        row.appendChild(chev)
+        row.addEventListener('click', () => original.click())
+        options.appendChild(row)
+      }
+      const observer = new MutationObserver(ensureRow)
+      observer.observe(document.body, { childList: true, subtree: true })
+      let mql = null
+      const onMq = () => ensureRow()
+      try {
+        if (window.matchMedia) {
+          mql = window.matchMedia(MOBILE_MQ)
+          if (mql.addEventListener) mql.addEventListener('change', onMq)
+          else if (mql.addListener) mql.addListener(onMq)
+        }
+      } catch (_) {}
+      return () => {
+        observer.disconnect()
+        try {
+          if (mql) {
+            if (mql.removeEventListener) mql.removeEventListener('change', onMq)
+            else if (mql.removeListener) mql.removeListener(onMq)
+          }
+        } catch (_) {}
+        disposeRow()
       }
     }
 
     function apply(ctx) {
       ensureStyle()
       ctx.effect(installSettingsHeaderReparent, 'dsh-webui-mobile: settings-header-reparent')
+      ctx.effect(installSettingsConfigRow, 'dsh-webui-mobile: settings-config-row')
       ctx.effect(
         () =>
           ctx.slots.inject('shell.overlay', () =>
