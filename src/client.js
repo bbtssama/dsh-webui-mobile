@@ -789,11 +789,24 @@ window.__ModuleLoader__.load({
     margin-left: 6px !important;
     align-self: center !important;
   }
-  /* Each nav cell stays a fixed pill so the strip scrolls horizontally. */
+  /* Each nav cell stays a fixed pill so the strip scrolls horizontally.
+     Compact sizing: at the 286px sheet width the desktop-sized pills (14px
+     font, 12/16 padding) push MCP+ off-screen and long labels like
+     "Agent 预设" look cramped; smaller pills keep every label readable. */
   html.${HTML_CLASS} .${SETTINGS.panel} .${SETTINGS.nav} .${SETTINGS.navCell} {
     flex: 0 0 auto !important;
     width: auto !important;
     white-space: nowrap !important;
+    font-size: 11px !important;
+    line-height: 1 !important;
+    padding: 6px 8px !important;
+    gap: 4px !important;
+    align-items: center !important;
+  }
+  html.${HTML_CLASS} .${SETTINGS.panel} .${SETTINGS.nav} .${SETTINGS.navCell} svg {
+    width: 12px !important;
+    height: 12px !important;
+    flex: none !important;
   }
   /* Hide the "设置" nav title on phones — the horizontally scrollable nav
      cells are self-explanatory and the title wastes vertical space. */
