@@ -2201,6 +2201,8 @@ window.__ModuleLoader__.load({
       let raf = 0
       let storeUnsub = null
       let mainCrumbEl = null
+      // Two-step reveal: 1st tap shows the main crumb's real name; 2nd tap navigates.
+      let revealed = false
       let alive = true
       // Only true while mobile is active; drives setup/teardown of everything below.
       let mobile = false
@@ -2292,7 +2294,7 @@ window.__ModuleLoader__.load({
             mainCrumbEl.setAttribute(CRUMB_FULL, (mainCrumbEl.textContent || '').trim())
           }
           const full = mainCrumbEl.getAttribute(CRUMB_FULL) || ''
-          const label = MAIN_LABEL
+          const label = revealed ? full : MAIN_LABEL
           if (mainCrumbEl.textContent !== label) mainCrumbEl.textContent = label
         }
 
@@ -2348,6 +2350,37 @@ window.__ModuleLoader__.load({
         }
       }
 
+      // Two-step crumb click: 1st tap reveals the main crumb's real name (no
+      // navigation); 2nd tap lets the native click navigation run (jump to that
+      // level). Clicking elsewhere reverts the reveal back to 主代理.
+      const liveMainCrumb = () => {
+        const nav = document.querySelector('[class$="_crumbs"]')
+        const seg = nav && nav.querySelector(':scope > [class$="_crumbSeg"]')
+        return seg ? seg.querySelector('button[class*="_crumb"]') : null
+      }
+      const onCrumbClick = (e) => {
+        if (!mobileDomAllowed()) return
+        const crumb = liveMainCrumb()
+        if (!crumb || !(e.target instanceof Element)) return
+        if (!(e.target === crumb || crumb.contains(e.target))) return
+        if (!revealed) {
+          // First tap: reveal the real name, do not navigate yet.
+          e.preventDefault()
+          e.stopPropagation()
+          revealed = true
+          schedule()
+        }
+        // When already revealed, do nothing — the native click navigates.
+      }
+      const onDocPointerDown = (e) => {
+        if (!mobileDomAllowed()) return
+        if (!revealed) return
+        const crumb = liveMainCrumb()
+        if (crumb && e.target instanceof Element && (e.target === crumb || crumb.contains(e.target))) return
+        revealed = false
+        schedule()
+      }
+
       // Install every mobile-only side effect. Called only when the viewport is mobile.
       const setupMobile = () => {
         const sessions = getSessions && getSessions()
@@ -2357,6 +2390,8 @@ window.__ModuleLoader__.load({
         if (!bodyObs) bodyObs = new MutationObserver(schedule)
         bodyObs.observe(document.body, { childList: true, subtree: true })
         ensureNavObserver()
+        document.addEventListener('click', onCrumbClick, true)
+        document.addEventListener('pointerdown', onDocPointerDown, true)
         schedule()
       }
 
@@ -2380,6 +2415,9 @@ window.__ModuleLoader__.load({
           cancelAnimationFrame(raf)
           raf = 0
         }
+        document.removeEventListener('click', onCrumbClick, true)
+        document.removeEventListener('pointerdown', onDocPointerDown, true)
+        revealed = false
         mainCrumbEl = null
         restoreNative()
       }
