@@ -376,13 +376,27 @@ window.__ModuleLoader__.load({
     flex-wrap: wrap !important;
     justify-content: center !important;
     align-items: baseline !important;
-    gap: 2px 0 !important;
-    row-gap: 2px !important;
+    gap: 1px 0 !important;
+    row-gap: 1px !important;
     max-width: 100% !important;
-    font-size: 12px !important;
-    line-height: 18px !important;
+    font-size: 10.5px !important;
+    line-height: 13px !important;
     text-align: center !important;
-    opacity: 0.8;
+    opacity: 1;
+  }
+  /* Line 1 (rounds/steps + LLM/tool timings): muted whisper */
+  html.${HTML_CLASS} .${STATS.root} > :first-child,
+  html.${HTML_CLASS} .${STATS.root} > :nth-child(3) {
+    font-size: 9.5px !important;
+    color: var(--dsw-alias-label-tertiary, #9aa0a8) !important;
+    font-weight: 500 !important;
+  }
+  /* Line 2 (cache hit + input/output tokens): the three cost metrics stand out */
+  html.${HTML_CLASS} .${STATS.root} > [data-dsh-stats="cacheHit"],
+  html.${HTML_CLASS} .${STATS.root} > :last-child {
+    font-weight: 700 !important;
+    font-size: 11.5px !important;
+    color: var(--dsw-alias-label-primary, #0f1115) !important;
   }
   html.${HTML_CLASS} .${STATS.root} [data-dsh-stats="speeds"],
   html.${HTML_CLASS} .${STATS.root} [data-dsh-stats="sep-hide"] {
