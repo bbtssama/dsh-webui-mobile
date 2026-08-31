@@ -2060,19 +2060,43 @@ window.__ModuleLoader__.load({
     }
 
 
-    // Generic content fit for FUTURE tabs (native or plugin): if any block in
-    // the settings sheet overflows horizontally, scale the whole block down
-    // (fonts and icons shrink together via zoom) until it fits. Inert today —
-    // kicks in automatically for content that is too wide at 374px.
+    // Generic content care for FUTURE tabs (native or plugin), in two passes:
+    // 1) squeeze repair — a text leaf crushed by its own row (one-character
+    //    vertical stacks, ellipsis down to a sliver) gets its row wrapped and
+    //    takes a full-width line of its own;
+    // 2) overflow fit — a block extending past the sheet scales down as a
+    //    whole (fonts and icons shrink together via zoom) until it fits.
+    // Both are class-agnostic: they apply to whatever any plugin registers.
     function installContentFit() {
       if (typeof document === 'undefined' || !window.MutationObserver) return
       let raf = 0
       const FLOOR = 0.72
+      const MIN_TEXT_W = 26
+      const repairSqueeze = (scope) => {
+        for (const leaf of scope.querySelectorAll('*')) {
+          if (leaf.childElementCount) continue
+          const text = (leaf.textContent || '').trim()
+          if (text.length <= 1) continue
+          const r = leaf.getBoundingClientRect()
+          const fs = parseFloat(getComputedStyle(leaf).fontSize) || 14
+          const crushedVertical = r.width < fs * 2 && r.height > fs * 2.2
+          const crushedFlat = leaf.scrollWidth > leaf.clientWidth + 1 && r.width < MIN_TEXT_W
+          if (!crushedVertical && !crushedFlat) continue
+          const row = leaf.parentElement
+          if (!row || row === scope) continue
+          const rcs = getComputedStyle(row)
+          if (!(rcs.display.includes('flex') || rcs.display === 'grid')) continue
+          if (rcs.flexWrap !== 'wrap') row.style.flexWrap = 'wrap'
+          if (leaf.style.flex !== '1 1 100%') leaf.style.flex = '1 1 100%'
+          if (getComputedStyle(leaf).whiteSpace === 'nowrap') leaf.style.whiteSpace = 'normal'
+        }
+      }
       const fitAll = () => {
         raf = 0
         if (!mobileDomAllowed()) return
         const scope = document.querySelector('[aria-modal="true"] [class*="_options"]')
         if (!scope) return
+        repairSqueeze(scope)
         // "fits" = the block's visual right edge stays inside the sheet.
         // (scrollWidth/clientWidth both scale with zoom, so their ratio can
         // never certify a fit — the rect check can.)
