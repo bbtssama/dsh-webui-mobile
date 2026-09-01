@@ -936,6 +936,132 @@ window.__ModuleLoader__.load({
     word-break: break-word !important;
   }
 
+  /* R4 — Agent preset cards (mobile readability + layout stability).
+     Ground truth (current DSH): card = [class$="_card"]; inside it a
+     [class$="_cardMain"] <button> holds the name ([class$="_cardHead"]) +
+     id ([class$="_cardId"]) + description ([class$="_cardDesc"]); a sibling
+     [class$="_cardFoot"] holds [class*="_iconButton"]s (data-tip = 查看/复制/
+     打开目录/删除). The native handlers work (buttons are not disabled and
+     pointer-events is auto) — the mobile bugs are VIEWPORT-FIT / hit-area:
+     the 查看 viewer dialog is centered at ~561px (wider than a phone → the
+     "详细文字" clips off the right edge), and the small foot buttons are hard
+     to tap. Class-agnostic structural selectors; mobile only. */
+  /* Long-press / drag must not start native text-selection or the iOS copy
+     bubble on the card. */
+  html.${HTML_CLASS} [aria-modal="true"] [class$="_cardMain"],
+  html.${HTML_CLASS} [aria-modal="true"] [class$="_cardHead"],
+  html.${HTML_CLASS} [aria-modal="true"] [class$="_cardDesc"],
+  html.${HTML_CLASS} [aria-modal="true"] [class$="_cardId"] {
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -webkit-touch-callout: none !important;
+  }
+  /* Uniform grid: two equal tracks, every card stretches to its row's height so
+     the grid reads as aligned rows (no card taller/misaligned than its peers). */
+  html.${HTML_CLASS} [aria-modal="true"] [class*="_options"] [class$="_cards"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    align-items: start !important; /* cards hug their content: uniform height, no stretch dead space */
+  }
+  html.${HTML_CLASS} [aria-modal="true"] [class*="_options"] [class$="_card"] {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    min-height: 0 !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: visible !important; /* never clip the foot buttons */
+  }
+  /* The name/desc block hugs its content (no flex-grow); the foot sits directly
+     beneath it. A uniform 2-line name cell keeps every card's content the same
+     height, so cards stay equal and the buttons line up without a big gap. */
+  html.${HTML_CLASS} [aria-modal="true"] [class*="_options"] [class$="_card"] [class$="_cardMain"] {
+    flex: 0 1 auto !important;   /* don't stretch: stop the dead space above the foot */
+    min-width: 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    padding: 10px 10px 4px !important; /* tighten bottom so the foot hugs the content */
+    gap: 4px !important;
+  }
+  /* Long names wrap inside the card and clip to 2 lines instead of pushing the
+     card taller / overflowing the grid cell. */
+  html.${HTML_CLASS} [aria-modal="true"] [class*="_options"] [class$="_cardHead"] {
+    min-width: 0 !important;
+    min-height: 42px !important; /* reserve 2 lines so ALL cards share one content height */
+    overflow: hidden !important;
+    display: -webkit-box !important;
+    -webkit-box-orient: vertical !important;
+    -webkit-line-clamp: 2 !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+  }
+  /* Description: a FIXED-height box (uniform across cards) that scrolls directly
+     on an up-swipe instead of dragging a selection cursor. */
+  html.${HTML_CLASS} [aria-modal="true"] [class*="_options"] [class$="_cardDesc"] {
+    font-size: 11px !important;
+    line-height: 1.4 !important;
+    display: block !important;
+    min-height: 4.2em !important;
+    max-height: 4.2em !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y !important;
+    overscroll-behavior: contain !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+  }
+  /* Foot icon buttons (查看/复制/打开目录/删除): larger tap target, never
+     clipped, and taps land reliably (touch-action manipulation). */
+  html.${HTML_CLASS} [aria-modal="true"] [class$="_cardFoot"] {
+    min-width: 0 !important;
+    flex: none !important;
+    flex-wrap: wrap !important;
+    gap: 0 !important;
+    padding: 2px 0 0 !important; /* snug above the buttons; removes dead vertical space */
+  }
+  html.${HTML_CLASS} [aria-modal="true"] [class$="_cardFoot"] [class*="_iconButton"] {
+    min-width: 40px !important;
+    min-height: 40px !important;
+    margin: 2px !important;
+    padding: 0 !important;
+    touch-action: manipulation !important;
+    pointer-events: auto !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+  }
+  /* 查看 viewer dialog: it is centered at ~561px wide (a desktop dialog). On a
+     phone that is wider than the viewport, so the "详细文字" clips off the right
+     edge before the pre's own scroll is reachable. Fit it to the viewport and let
+     the code wrap + scroll instead of overflowing horizontally. */
+  html.${HTML_CLASS} [role="dialog"]:has([class$="_viewerCode"]) {
+    z-index: 2000 !important; /* topmost: never behind the settings panel/mask */
+    width: calc(100vw - 16px) !important;
+    max-width: calc(100vw - 16px) !important;
+    max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px)) !important;
+    box-sizing: border-box !important;
+    overflow: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  /* The 查看 viewer is a separate dialog-library overlay portal (a body-level div,
+     parent of the rtSEdW_dialog) with position:fixed + z-index:1000. Our settings
+     panel lives inside the sidebar, which we LIFT to z-index:1001 while its overlay
+     is mounted (:has(.VOzbGW_overlay)), so the settings panel paints ABOVE the
+     viewer's 1000 and hides the "查看" detail text (DOM present but not visible).
+     Lift the viewer's portal root above the lifted sidebar so the detail truly
+     shows in the foreground. The viewer code block only ever exists inside this
+     portal, so :has([class$="_viewerCode"]) scopes it to the viewer alone. */
+  html.${HTML_CLASS} body > div:has([class$="_viewerCode"]) {
+    z-index: 2000 !important; /* above the lifted sidebar (1001) + masks */
+  }
+  html.${HTML_CLASS} [role="dialog"]:has([class$="_viewerCode"]) [class$="_viewerCode"] {
+    max-height: none !important;
+    overflow: auto !important;
+    -webkit-overflow-scrolling: touch;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+  }
+
   /* Keep iOS zoom guard */
   html.${HTML_CLASS} .${INPUT.input},
   html.${HTML_CLASS} textarea,
