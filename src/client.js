@@ -942,6 +942,137 @@ window.__ModuleLoader__.load({
   html.${HTML_CLASS} input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]) {
     font-size: 16px !important;
   }
+
+  /* R3 — model editor compact: narrow field rows so long model names / api keys /
+     api urls render fully, and tighten the expanded card's padding/gap. The editor
+     is the model provider's edit card inside the settings modal: [class$="_editor"]
+     holds [class$="_field"] > [class$="_fieldLabel"] + input[class$="_input"]/
+     select[class$="_input"]. Class-agnostic structural selectors; mobile only. */
+  html.${HTML_CLASS} [aria-modal="true"] [class$="_editor"] {
+    gap: 10px !important;
+    padding: 10px 12px !important;
+  }
+  html.${HTML_CLASS} [aria-modal="true"] [class$="_editorHeader"] {
+    flex-wrap: wrap !important;
+    row-gap: 4px !important;
+  }
+  html.${HTML_CLASS} [aria-modal="true"] [class$="_editor"] [class$="_field"] {
+    width: 100% !important;
+    min-width: 0 !important;
+    gap: 4px !important;
+  }
+  html.${HTML_CLASS} [aria-modal="true"] [class$="_editor"] [class$="_fieldLabel"] {
+    flex: none !important;
+    max-width: 100% !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  /* The value / input: take remaining width. Single-line <input> cannot wrap and does
+     not honor text-overflow:ellipsis, so long api urls / api keys / model names are shown
+     in full by the model-editor value assist (title tooltip + a wrapping read-only
+     sidecar line injected after the overflowing input). The input stays a clean
+     single-line field. */
+  html.${HTML_CLASS} [aria-modal="true"] [class$="_editor"] input[class$="_input"],
+  html.${HTML_CLASS} [aria-modal="true"] [class$="_editor"] select[class$="_input"],
+  html.${HTML_CLASS} [aria-modal="true"] [class$="_editor"] textarea[class$="_input"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    flex: 1 1 auto !important;
+    height: 31px !important;
+    min-height: 31px !important;
+    font-size: 13px !important;
+    line-height: 31px !important;
+    padding: 0 8px !important;
+  }
+  html.${HTML_CLASS} [aria-modal="true"] [class$="_editor"] textarea[class$="_input"] {
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+    resize: vertical !important;
+    height: auto !important;
+    min-height: 31px !important;
+    line-height: 1.4 !important;
+    padding: 6px 8px !important;
+  }
+  /* Expanded details body (自定义设置) — keep it from overshooting, tighten gaps. */
+  html.${HTML_CLASS} [aria-modal="true"] [class$="_editor"] [class*="_customizedBody"] {
+    max-width: 100% !important;
+    min-width: 0 !important;
+    gap: 6px !important;
+    row-gap: 6px !important;
+  }
+  html.${HTML_CLASS} [aria-modal="true"] [class$="_editor"] details[class$="_customized"] {
+    margin-top: 6px !important;
+    padding-top: 6px !important;
+  }
+  /* Model-catalog blocks (模型 ID / 显示名称 + 容量">"/垃圾桶) — compact, uniform height,
+     minimal internal/paragraph whitespace. Keep the row on ONE tight wrapping line with
+     equally-sized inputs/buttons (no tall column stack that leaves big gaps). */
+  html.${HTML_CLASS} [aria-modal="true"] [class$="_editor"] [class$="_modelRow"] {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 3px 6px !important;
+    row-gap: 3px !important;
+    padding: 1px 0 !important;
+  }
+  html.${HTML_CLASS} [aria-modal="true"] [class$="_editor"] [class$="_modelRow"] input[class$="_input"] {
+    flex: 1 1 140px !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: auto !important;
+    box-sizing: border-box !important;
+    height: 31px !important;
+    min-height: 31px !important;
+    font-size: 13px !important;
+    line-height: 31px !important;
+    padding: 0 8px !important;
+  }
+  /* The 容量(">") chevron and trash buttons sit on the same tight row, uniform 31px. */
+  html.${HTML_CLASS} [aria-modal="true"] [class$="_editor"] [class$="_modelRow"] button[class*="_iconButton"] {
+    flex: none !important;
+    width: 31px !important;
+    height: 31px !important;
+    min-width: 31px !important;
+    min-height: 31px !important;
+    max-width: 31px !important;
+    max-height: 31px !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  /* One block wraps no extra space: each entry hugs its single row. */
+  html.${HTML_CLASS} [aria-modal="true"] [class$="_editor"] [class$="_modelEntry"] {
+    padding: 1px 0 !important;
+  }
+  html.${HTML_CLASS} [aria-modal="true"] [class$="_editor"] [class$="_modelList"] {
+    gap: 3px !important;
+    row-gap: 3px !important;
+    padding: 0 !important;
+  }
+  html.${HTML_CLASS} [aria-modal="true"] [class$="_editor"] [class$="_modelCatalog"] {
+    gap: 5px !important;
+    row-gap: 5px !important;
+    min-width: 0 !important;
+  }
+  /* 模型目录 heading row (title + meta) — tighten spacing to the block list. */
+  html.${HTML_CLASS} [aria-modal="true"] [class$="_editor"] [class$="_modelListHead"] {
+    padding: 0 0 2px !important;
+  }
+  html.${HTML_CLASS} [aria-modal="true"] [class$="_editor"] [class$="_modelCatalogHeading"] {
+    row-gap: 0 !important;
+  }
+  html.${HTML_CLASS} [aria-modal="true"] [class$="_editor"] [class$="_modelCatalogTitle"],
+  html.${HTML_CLASS} [aria-modal="true"] [class$="_editor"] [class$="_modelCatalogMeta"] {
+    margin: 0 !important;
+  }
 }
 
 .dshMobMenu {
@@ -2481,6 +2612,108 @@ window.__ModuleLoader__.load({
       }
     }
 
+    // R3 — model editor value readability assist. Single-line <input> fields can't wrap
+    // (text-overflow:ellipsis does not apply to inputs), so long api urls / api keys /
+    // model names get clipped. This sets a title tooltip AND, for any input whose text
+    // overflows its box, injects a read-only wrapping sidecar line that shows the full
+    // value so it is readable within one cell without hover. Mobile only — gated by
+    // mobileDomAllowed(); teardown removes sidecars and titles.
+    function installModelEditorTooltip() {
+      if (typeof document === 'undefined' || !window.MutationObserver) return undefined
+      let raf = 0
+      let alive = true
+      let mobile = false
+      let bodyObs = null
+      let mql = null
+
+      // Remove any previously injected sidecar lines (defensive clean).
+      const clearSidecars = () => {
+        for (const el of document.querySelectorAll('[data-dsh-sidecar]')) el.remove()
+      }
+
+      const applyTooltips = () => {
+        raf = 0
+        if (!alive || !mobileDomAllowed()) return
+        const inputs = document.querySelectorAll('[aria-modal="true"] [class$="_editor"] input[class$="_input"], [aria-modal="true"] [class$="_editor"] textarea[class$="_input"]')
+        for (const input of inputs) {
+          // Never expose a secret in plain text: keep the password mask (dot), skip the
+          // title tooltip and the inline sidecar for type=password inputs, and remove
+          // any that may have been injected before this guard. Textareas/selects pass
+          // through (they are not secrets).
+          if (input instanceof HTMLInputElement && input.type === 'password') {
+            if (input.getAttribute('title')) input.removeAttribute('title')
+            const prev = input.nextElementSibling
+            if (prev && prev.hasAttribute('data-dsh-sidecar')) prev.remove()
+            continue
+          }
+          const value = input.value ?? ''
+          // Tooltip: full value on hover / long-press.
+          if (value && input.getAttribute('title') !== value) input.setAttribute('title', value)
+          else if (!value && input.getAttribute('title')) input.removeAttribute('title')
+          // Sidecar: a read-only wrapping line with the full value if it overflows.
+          const overflow = value && input.scrollWidth > input.clientWidth + 1
+          const existing = input.nextElementSibling
+          if (overflow) {
+            if (!existing || !existing.hasAttribute('data-dsh-sidecar')) {
+              const side = document.createElement('div')
+              side.setAttribute('data-dsh-sidecar', 'true')
+              side.textContent = value
+              side.style.cssText = 'font-size:12px;line-height:16px;color:var(--dsw-alias-label-tertiary,#9aa0a8);white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;max-width:100%;padding:1px 0;'
+              input.insertAdjacentElement('afterend', side)
+            } else {
+              existing.textContent = value
+            }
+          } else if (existing && existing.hasAttribute('data-dsh-sidecar')) {
+            existing.remove()
+          }
+        }
+      }
+
+      const schedule = () => {
+        if (!alive || !mobile) return
+        if (raf) return
+        raf = requestAnimationFrame(applyTooltips)
+      }
+
+      const setupMobile = () => {
+        if (!bodyObs) bodyObs = new MutationObserver(schedule)
+        bodyObs.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['value'], characterData: true })
+        schedule()
+      }
+      const teardownMobile = () => {
+        if (bodyObs) { bodyObs.disconnect(); bodyObs = null }
+        if (raf) { cancelAnimationFrame(raf); raf = 0 }
+        clearSidecars()
+      }
+      const onMq = () => {
+        const next = mobileDomAllowed()
+        if (next === mobile) return
+        mobile = next
+        if (mobile) setupMobile()
+        else teardownMobile()
+      }
+
+      try {
+        if (window.matchMedia) {
+          mql = window.matchMedia(MOBILE_MQ)
+          if (mql.addEventListener) mql.addEventListener('change', onMq)
+          else if (mql.addListener) mql.addListener(onMq)
+        }
+      } catch (_) {}
+      onMq()
+
+      return () => {
+        alive = false
+        teardownMobile()
+        try {
+          if (mql) {
+            if (mql.removeEventListener) mql.removeEventListener('change', onMq)
+            else if (mql.removeListener) mql.removeListener(onMq)
+          }
+        } catch (_) {}
+      }
+    }
+
     function apply(ctx) {
       ensureStyle()
       ctx.effect(
@@ -2493,6 +2726,7 @@ window.__ModuleLoader__.load({
         }),
         'dsh-webui-mobile: subagent-crumb-rename',
       )
+      ctx.effect(installModelEditorTooltip, 'dsh-webui-mobile: model-editor-tooltip')
       ctx.effect(installSettingsHeaderReparent, 'dsh-webui-mobile: settings-header-reparent')
       ctx.effect(installSettingsConfigRow, 'dsh-webui-mobile: settings-config-row')
       ctx.effect(installPopupZGuard, 'dsh-webui-mobile: popup-z-guard')
