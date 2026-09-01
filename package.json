@@ -1,6 +1,6 @@
 {
   "name": "dsh-webui-mobile",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "description": "Mobile web shell for the DeepSeek Harness GUI: phone layout, drawers, FAB, mobile composer fixes, in-composer image upload",
   "type": "module",
   "main": "./src/index.js",
