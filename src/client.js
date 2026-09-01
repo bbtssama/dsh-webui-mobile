@@ -1199,6 +1199,183 @@ window.__ModuleLoader__.load({
   html.${HTML_CLASS} [aria-modal="true"] [class$="_editor"] [class$="_modelCatalogMeta"] {
     margin: 0 !important;
   }
+
+  /* ===== R5 — appearance themes (mobile only) ===== */
+  /* Hide the native 浅色/深色/跟随系统 cubes; our 3-button toolbar replaces them. */
+  html.${HTML_CLASS} [aria-modal="true"] [class*="_cubeRow"] [class*="_themeCube"] {
+    display: none !important;
+  }
+  /* Native controls (scrollbars / selects) follow the chosen colour-scheme. */
+  html.${HTML_CLASS} { color-scheme: light; }
+  html.${HTML_CLASS}[data-ds-dark] { color-scheme: dark; }
+
+  /* Accent mapping — ONE --dsh-theme-accent drives every accent-themed token, so a
+     preset or a custom accent stays coherent (single source of truth for the 主色). */
+  html.${HTML_CLASS}[data-dsh-theme] body {
+    --dsw-alias-state-business-primary: var(--dsh-theme-accent);
+    --dsw-alias-brand-primary-new-colorprimary-new-color: var(--dsh-theme-accent);
+    --dsw-alias-button-info-fill: var(--dsh-theme-accent);
+    --dsw-alias-button-info-hover: color-mix(in srgb, var(--dsh-theme-accent) 80%, #fff);
+    --dsw-alias-button-primary-fill: var(--dsh-theme-accent);
+    --dsw-alias-button-primary-hover: color-mix(in srgb, var(--dsh-theme-accent) 76%, #000);
+    --dsw-alias-button-primary-dimmed: color-mix(in srgb, var(--dsh-theme-accent) 14%, var(--dsw-alias-bg-layer-1));
+    --dsw-alias-interactive-bg-hover-accent: color-mix(in srgb, var(--dsh-theme-accent) 14%, var(--dsw-alias-bg-base));
+    --dsw-alias-state-business-tertiary: color-mix(in srgb, var(--dsh-theme-accent) 16%, var(--dsw-alias-bg-base));
+    --dsw-specific-bubble: color-mix(in srgb, var(--dsh-theme-accent) 9%, var(--dsw-alias-bg-base));
+    --dsw-specific-bubble-highlight: color-mix(in srgb, var(--dsh-theme-accent) 18%, var(--dsw-alias-bg-base));
+    --dsw-specific-sidebar-nav-item-active-accent: color-mix(in srgb, var(--dsh-theme-accent) 20%, var(--dsw-alias-bg-base));
+    --dsw-alias-scrollbar-hover-l1: color-mix(in srgb, var(--dsh-theme-accent) 26%, var(--dsw-alias-bg-base));
+    --dsw-alias-scrollbar-hover-l2: color-mix(in srgb, var(--dsh-theme-accent) 26%, var(--dsw-alias-bg-base));
+  }
+
+  /* — 预设 1 · 晴空蓝 (QQ蓝白): airy, trustworthy blue — */
+  html.${HTML_CLASS}[data-dsh-theme="qq"] { --dsh-theme-accent: #2E7CF6; }
+  html.${HTML_CLASS}[data-dsh-theme="qq"] body {
+    --dsw-alias-bg-base:#F4F8FF; --dsw-alias-bg-layer-1:#FFFFFF; --dsw-alias-bg-layer-2:#EEF3FC; --dsw-alias-bg-layer-3:#E3EBF9;
+    --dsw-alias-bg-module-platform:#EAF0FB; --dsw-alias-bg-overlay:#DEE7F7; --dsw-alias-bg-multi-select:#EAF0FB;
+    --dsw-alias-label-primary:#12233B; --dsw-alias-label-secondary:#5A6B8C; --dsw-alias-label-tertiary:#8192AB; --dsw-alias-label-caption:#A6B2C5;
+    --dsw-alias-label-primary-dimmed:#12233B;
+    --dsw-alias-border-l1:rgba(46,124,246,.10); --dsw-alias-border-l2:rgba(46,124,246,.16); --dsw-alias-border-l3:rgba(46,124,246,.24); --dsw-alias-border-l2-darkmode-thin:rgba(46,124,246,.10);
+    --dsw-specific-sidebar-fill:#F7FAFF; --dsw-specific-menu:#FFFFFF; --dsw-specific-input-major:#FFFFFF; --dsw-specific-selector:#EEF3FC; --dsw-specific-tip:#F0F4FC;
+    --dsw-alias-scrollbar-bg-l1:#E4EAF4; --dsw-alias-scrollbar-bg-l2:#E4EAF4;
+    --dsw-alias-button-floating-fill:#FFFFFF; --dsw-alias-button-floating-hover:#EAF0FB;
+  }
+  html.${HTML_CLASS}[data-dsh-theme="qq"] body[data-ds-dark-theme] {
+    --dsw-alias-bg-base:#10141D; --dsw-alias-bg-layer-1:#171D2A; --dsw-alias-bg-layer-2:#1F2737; --dsw-alias-bg-layer-3:#283043;
+    --dsw-alias-bg-module-platform:#222A3A; --dsw-alias-bg-overlay:#2C3547; --dsw-alias-bg-multi-select:#1F2737;
+    --dsw-alias-label-primary:#E7EDF8; --dsw-alias-label-secondary:#93A3BD; --dsw-alias-label-tertiary:#6E7E98; --dsw-alias-label-caption:#5A6A84;
+    --dsw-alias-label-primary-dimmed:#DDE6F5;
+    --dsw-alias-border-l1:rgba(91,155,255,.12); --dsw-alias-border-l2:rgba(91,155,255,.20); --dsw-alias-border-l3:rgba(91,155,255,.28); --dsw-alias-border-l2-darkmode-thin:rgba(91,155,255,.12);
+    --dsw-specific-sidebar-fill:#141923; --dsw-specific-menu:#1D2330; --dsw-specific-input-major:#1F2737; --dsw-specific-selector:#232B3B; --dsw-specific-tip:#20283A;
+    --dsw-alias-scrollbar-bg-l1:#2B3345; --dsw-alias-scrollbar-bg-l2:#2B3345;
+    --dsw-alias-button-floating-fill:#1D2330; --dsw-alias-button-floating-hover:#283043;
+  }
+
+  /* — 预设 2 · 青草绿 (古早微信绿灰): warm, calm, nostalgic — */
+  html.${HTML_CLASS}[data-dsh-theme="wechat"] { --dsh-theme-accent: #07C160; }
+  html.${HTML_CLASS}[data-dsh-theme="wechat"] body {
+    --dsw-alias-bg-base:#EFF3EF; --dsw-alias-bg-layer-1:#FFFFFF; --dsw-alias-bg-layer-2:#F3F7F3; --dsw-alias-bg-layer-3:#EAF0EA;
+    --dsw-alias-bg-module-platform:#ECF2EC; --dsw-alias-bg-overlay:#E3EBE3; --dsw-alias-bg-multi-select:#ECF2EC;
+    --dsw-alias-label-primary:#1F2A21; --dsw-alias-label-secondary:#5F6B62; --dsw-alias-label-tertiary:#8A948C; --dsw-alias-label-caption:#A9B2AA;
+    --dsw-alias-label-primary-dimmed:#1F2A21;
+    --dsw-alias-border-l1:rgba(7,193,96,.10); --dsw-alias-border-l2:rgba(7,193,96,.16); --dsw-alias-border-l3:rgba(7,193,96,.24); --dsw-alias-border-l2-darkmode-thin:rgba(7,193,96,.10);
+    --dsw-specific-sidebar-fill:#F5F8F5; --dsw-specific-menu:#FFFFFF; --dsw-specific-input-major:#FFFFFF; --dsw-specific-selector:#F0F5F0; --dsw-specific-tip:#EEF4EE;
+    --dsw-alias-scrollbar-bg-l1:#E0E7E0; --dsw-alias-scrollbar-bg-l2:#E0E7E0;
+    --dsw-alias-button-floating-fill:#FFFFFF; --dsw-alias-button-floating-hover:#EDF3ED;
+  }
+  html.${HTML_CLASS}[data-dsh-theme="wechat"] body[data-ds-dark-theme] {
+    --dsw-alias-bg-base:#131815; --dsw-alias-bg-layer-1:#1A211D; --dsw-alias-bg-layer-2:#222B26; --dsw-alias-bg-layer-3:#2B362F;
+    --dsw-alias-bg-module-platform:#232C27; --dsw-alias-bg-overlay:#2C3830; --dsw-alias-bg-multi-select:#222B26;
+    --dsw-alias-label-primary:#E5EFE8; --dsw-alias-label-secondary:#93A69B; --dsw-alias-label-tertiary:#6E8175; --dsw-alias-label-caption:#5A6B61;
+    --dsw-alias-label-primary-dimmed:#D8E8DD;
+    --dsw-alias-border-l1:rgba(43,217,126,.12); --dsw-alias-border-l2:rgba(43,217,126,.20); --dsw-alias-border-l3:rgba(43,217,126,.28); --dsw-alias-border-l2-darkmode-thin:rgba(43,217,126,.12);
+    --dsw-specific-sidebar-fill:#161C18; --dsw-specific-menu:#1E2621; --dsw-specific-input-major:#222B26; --dsw-specific-selector:#263029; --dsw-specific-tip:#232C27;
+    --dsw-alias-scrollbar-bg-l1:#2A352D; --dsw-alias-scrollbar-bg-l2:#2A352D;
+    --dsw-alias-button-floating-fill:#1E2621; --dsw-alias-button-floating-hover:#2B362F;
+  }
+
+  /* — 预设 3 · 樱粉白 (老B站粉白): playful, soft pink — */
+  html.${HTML_CLASS}[data-dsh-theme="bilibili"] { --dsh-theme-accent: #FB7299; }
+  html.${HTML_CLASS}[data-dsh-theme="bilibili"] body {
+    --dsw-alias-bg-base:#FFF5F7; --dsw-alias-bg-layer-1:#FFFFFF; --dsw-alias-bg-layer-2:#FEF0F3; --dsw-alias-bg-layer-3:#FDE4EA;
+    --dsw-alias-bg-module-platform:#FEEFF2; --dsw-alias-bg-overlay:#FCE3E8; --dsw-alias-bg-multi-select:#FEEFF2;
+    --dsw-alias-label-primary:#2B1E26; --dsw-alias-label-secondary:#6E5860; --dsw-alias-label-tertiary:#9A828B; --dsw-alias-label-caption:#B7A0A8;
+    --dsw-alias-label-primary-dimmed:#2B1E26;
+    --dsw-alias-border-l1:rgba(251,114,153,.10); --dsw-alias-border-l2:rgba(251,114,153,.16); --dsw-alias-border-l3:rgba(251,114,153,.24); --dsw-alias-border-l2-darkmode-thin:rgba(251,114,153,.10);
+    --dsw-specific-sidebar-fill:#FFF8FA; --dsw-specific-menu:#FFFFFF; --dsw-specific-input-major:#FFFFFF; --dsw-specific-selector:#FEF0F3; --dsw-specific-tip:#FEF0F3;
+    --dsw-alias-scrollbar-bg-l1:#F9E4EA; --dsw-alias-scrollbar-bg-l2:#F9E4EA;
+    --dsw-alias-button-floating-fill:#FFFFFF; --dsw-alias-button-floating-hover:#FEEAF0;
+  }
+  html.${HTML_CLASS}[data-dsh-theme="bilibili"] body[data-ds-dark-theme] {
+    --dsw-alias-bg-base:#181318; --dsw-alias-bg-layer-1:#211A20; --dsw-alias-bg-layer-2:#2B222A; --dsw-alias-bg-layer-3:#362B38;
+    --dsw-alias-bg-module-platform:#2B222A; --dsw-alias-bg-overlay:#362B38; --dsw-alias-bg-multi-select:#2B222A;
+    --dsw-alias-label-primary:#F2E7EC; --dsw-alias-label-secondary:#A88E99; --dsw-alias-label-tertiary:#7C6770; --dsw-alias-label-caption:#6B565F;
+    --dsw-alias-label-primary-dimmed:#E9DBE2;
+    --dsw-alias-border-l1:rgba(255,143,177,.14); --dsw-alias-border-l2:rgba(255,143,177,.22); --dsw-alias-border-l3:rgba(255,143,177,.30); --dsw-alias-border-l2-darkmode-thin:rgba(255,143,177,.14);
+    --dsw-specific-sidebar-fill:#1C161C; --dsw-specific-menu:#241C23; --dsw-specific-input-major:#2B222A; --dsw-specific-selector:#302730; --dsw-specific-tip:#2B222A;
+    --dsw-alias-scrollbar-bg-l1:#3A2E38; --dsw-alias-scrollbar-bg-l2:#3A2E38;
+    --dsw-alias-button-floating-fill:#241C23; --dsw-alias-button-floating-hover:#362B38;
+  }
+
+  /* 3-button theme toolbar (replaces the native cubes) */
+  html.${HTML_CLASS} .dshMobThemeBar {
+    display: flex !important;
+    flex: 1 1 100% !important;
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin-top: 4px !important;
+  }
+  html.${HTML_CLASS} .dshMobThemeBtn {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    appearance: none !important;
+    border: 1px solid var(--dsw-alias-border-l2, rgba(0,0,0,.12)) !important;
+    border-radius: 12px !important;
+    background: var(--dsw-alias-bg-layer-2, var(--dsw-alias-bg-base, #fff)) !important;
+    color: var(--dsw-alias-label-primary, #0f1115) !important;
+    font-size: 12.5px !important;
+    line-height: 1.25 !important;
+    text-align: center !important;
+    padding: 10px 6px !important;
+    cursor: pointer !important;
+    -webkit-tap-highlight-color: transparent !important;
+    touch-action: manipulation !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+  }
+  html.${HTML_CLASS} .dshMobThemeBtn[data-active="true"] {
+    border-color: var(--dsh-theme-accent, var(--dsw-alias-state-business-primary, #4176e6)) !important;
+    box-shadow: inset 0 0 0 1.5px var(--dsh-theme-accent, var(--dsw-alias-state-business-primary, #4176e6)) !important;
+    color: var(--dsh-theme-accent, var(--dsw-alias-state-business-primary, #4176e6)) !important;
+    font-weight: 700 !important;
+    background: color-mix(in srgb, var(--dsh-theme-accent, var(--dsw-alias-state-business-primary, #4176e6)) 12%, var(--dsw-alias-bg-base, #fff)) !important;
+  }
+
+  /* 自定义 card — bottom-sheet */
+  html.${HTML_CLASS} .dshMobThemeMask {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 1300 !important; /* above the lifted settings sidebar (1001) / body dialogs */
+    background: var(--dsw-alias-bg-mask-1, rgba(15,17,21,.5)) !important;
+    display: none !important;
+    align-items: flex-end !important;
+    justify-content: center !important;
+    padding: 12px !important;
+    box-sizing: border-box !important;
+  }
+  html.${HTML_CLASS} .dshMobThemeMask[data-open="true"] { display: flex !important; }
+  html.${HTML_CLASS} .dshMobThemeSheet {
+    width: 100% !important;
+    max-width: 480px !important;
+    max-height: min(82vh, 82dvh) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    background: var(--dsw-alias-bg-layer-2, var(--dsw-alias-bg-base, #fff)) !important;
+    border-radius: 20px 20px 14px 14px !important;
+    padding: 18px 16px calc(18px + env(safe-area-inset-bottom, 0px)) !important;
+    box-shadow: var(--dsw-shadow-lv3, 0 12px 40px rgba(0,0,0,.2)) !important;
+  }
+  html.${HTML_CLASS} .dshMobThemeSheet h4 { margin: 0 0 4px !important; font-size: 15px !important; color: var(--dsw-alias-label-primary, #0f1115) !important; }
+  html.${HTML_CLASS} .dshMobThemeSub { margin: 0 0 12px !important; font-size: 12px !important; color: var(--dsw-alias-label-tertiary, #81858c) !important; }
+  html.${HTML_CLASS} .dshMobThemePresets { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 10px !important; }
+  html.${HTML_CLASS} .dshMobThemePreset {
+    border: 1px solid var(--dsw-alias-border-l2, rgba(0,0,0,.12)) !important;
+    border-radius: 14px !important; padding: 10px !important;
+    background: var(--dsw-alias-bg-layer-1, #fff) !important; cursor: pointer !important; text-align: left !important;
+  }
+  html.${HTML_CLASS} .dshMobThemePreset[data-active="true"] {
+    border-color: var(--dsh-theme-accent, var(--dsw-alias-state-business-primary, #4176e6)) !important;
+    box-shadow: inset 0 0 0 1px var(--dsh-theme-accent, var(--dsw-alias-state-business-primary, #4176e6)) !important;
+  }
+  html.${HTML_CLASS} .dshMobThemePresetSwatch { height: 36px !important; border-radius: 9px !important; margin-bottom: 7px !important; border: 1px solid rgba(0,0,0,.08) !important; }
+  html.${HTML_CLASS} .dshMobThemePresetName { font-size: 12px !important; font-weight: 600 !important; color: var(--dsw-alias-label-primary, #0f1115) !important; }
+  html.${HTML_CLASS} .dshMobThemePresetDesc { font-size: 10.5px !important; color: var(--dsw-alias-label-tertiary, #81858c) !important; }
+  html.${HTML_CLASS} .dshMobThemePalLabel { margin: 14px 0 8px !important; font-size: 12.5px !important; font-weight: 600 !important; color: var(--dsw-alias-label-primary, #0f1115) !important; }
+  html.${HTML_CLASS} .dshMobThemePalette { display: flex !important; flex-wrap: wrap !important; gap: 10px !important; }
+  html.${HTML_CLASS} .dshMobThemeDot { width: 34px !important; height: 34px !important; border-radius: 50% !important; cursor: pointer !important; border: 1px solid rgba(0,0,0,.14) !important; flex: none !important; }
+  html.${HTML_CLASS} .dshMobThemeDot[data-active="true"] { outline: 2px solid var(--dsw-alias-label-primary, #0f1115) !important; outline-offset: 2px !important; }
+  html.${HTML_CLASS} .dshMobThemeClose { margin-top: 14px !important; width: 100% !important; padding: 11px !important; border-radius: 12px !important; border: none !important; background: var(--dsw-alias-bg-module-platform, #f5f6f7) !important; color: var(--dsw-alias-label-primary, #0f1115) !important; font-size: 14px !important; font-weight: 600 !important; -webkit-tap-highlight-color: transparent !important; touch-action: manipulation !important; }
 }
 
 .dshMobMenu {
@@ -2831,6 +3008,211 @@ window.__ModuleLoader__.load({
       }
     }
 
+    // R5 — appearance themes (mobile only). DSH flips light/dark with a
+    // `data-ds-dark-theme` attribute on <body> (setting it → dark, tested it sticks),
+    // and the semantic palette lives as --dsw-alias-*/--dsw-specific-* custom props on
+    // <body>. We drive both: keep the dark flag on body and override the palette on
+    // html.dsh-mobile-shell via a [data-dsh-theme] attribute (preset) or an inline
+    // --dsh-theme-accent (custom accent). A 3-button toolbar + a bottom-sheet replace
+    // the native 浅色/深色/跟随系统 cubes (hidden by CSS). Mobile-only.
+    function installThemeCustom() {
+      if (typeof document === 'undefined' || !window.MutationObserver) return undefined
+      const KEY = 'dsh-mobile-theme-v1'
+      const PRESETS = [
+        { id: 'qq', name: '晴空蓝', desc: 'QQ 蓝白', light: '#F4F8FF', dark: '#10141D', accent: '#2E7CF6' },
+        { id: 'wechat', name: '青草绿', desc: '古早微信绿灰', light: '#EFF3EF', dark: '#131815', accent: '#07C160' },
+        { id: 'bilibili', name: '樱粉白', desc: '老B站粉白', light: '#FFF5F7', dark: '#181318', accent: '#FB7299' },
+      ]
+      const DOTS = ['#2E7CF6', '#12B7F5', '#07C160', '#FB7299', '#FF7A45', '#8A6FFF', '#F5576C', '#F5A623']
+      let alive = true, mobile = false
+      let bodyObs = null, mql = null, sysMql = null
+      let bar = null, mask = null
+
+      const readState = () => {
+        try {
+          const s = JSON.parse(localStorage.getItem(KEY) || 'null')
+          if (s && (s.mode === 'light' || s.mode === 'dark' || s.mode === 'system')) return s
+        } catch (_) {}
+        return { mode: 'system', theme: '', accent: '' }
+      }
+      const writeState = (s) => { try { localStorage.setItem(KEY, JSON.stringify(s)) } catch (_) {} }
+      const isDark = (s) => s.mode === 'dark' ? true : s.mode === 'light' ? false : !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)
+
+      const apply = (s) => {
+        const html = document.documentElement
+        const dark = isDark(s)
+        if (dark) document.body.setAttribute('data-ds-dark-theme', '')
+        else document.body.removeAttribute('data-ds-dark-theme')
+        html.classList.toggle('dsh-dark', dark)
+        if (s.theme) { html.setAttribute('data-dsh-theme', s.theme); html.style.removeProperty('--dsh-theme-accent') }
+        else if (s.accent) { html.setAttribute('data-dsh-theme', 'accent'); html.style.setProperty('--dsh-theme-accent', s.accent) }
+        else { html.removeAttribute('data-dsh-theme'); html.style.removeProperty('--dsh-theme-accent') }
+        syncBar(s)
+      }
+
+      const syncBar = (s) => {
+        if (bar) {
+          const dark = isDark(s)
+          const tg = bar.querySelector('[data-mode="lightdark"]')
+          if (tg) { tg.textContent = dark ? '深色' : '浅色'; tg.setAttribute('data-active', s.mode !== 'system' ? 'true' : 'false') }
+          const sy = bar.querySelector('[data-mode="system"]')
+          if (sy) sy.setAttribute('data-active', s.mode === 'system' ? 'true' : 'false')
+          const cu = bar.querySelector('[data-mode="custom"]')
+          if (cu) cu.setAttribute('data-active', (s.theme || s.accent) ? 'true' : 'false')
+        }
+        if (mask) {
+          const act = s.theme || s.accent
+          for (const p of mask.querySelectorAll('[data-preset]')) p.setAttribute('data-active', p.getAttribute('data-preset') === s.theme ? 'true' : 'false')
+          for (const d of mask.querySelectorAll('[data-dot]')) d.setAttribute('data-active', d.getAttribute('data-dot') === s.accent ? 'true' : 'false')
+        }
+      }
+
+      const onBar = (e) => {
+        const b = e.target.closest('[data-mode]')
+        if (!b) return
+        const m = b.getAttribute('data-mode')
+        const s = readState()
+        if (m === 'lightdark') { s.mode = isDark(s) ? 'light' : 'dark'; writeState(s); apply(s) }
+        else if (m === 'system') { s.mode = 'system'; writeState(s); apply(s) }
+        else if (m === 'custom') { openSheet(s) }
+      }
+
+      const openSheet = (s) => {
+        if (!mask) {
+          mask = document.createElement('div')
+          mask.className = 'dshMobThemeMask'
+          const sheet = document.createElement('div')
+          sheet.className = 'dshMobThemeSheet'
+          const h = document.createElement('h4'); h.textContent = '自定义主题'
+          const sub = document.createElement('div'); sub.className = 'dshMobThemeSub'; sub.textContent = '选一套预设，或挑一个主题色'
+          sheet.appendChild(h); sheet.appendChild(sub)
+          const grid = document.createElement('div'); grid.className = 'dshMobThemePresets'
+          for (const p of PRESETS) {
+            const cell = document.createElement('button')
+            cell.type = 'button'; cell.className = 'dshMobThemePreset'; cell.setAttribute('data-preset', p.id)
+            const sw = document.createElement('div'); sw.className = 'dshMobThemePresetSwatch'
+            sw.style.background = 'linear-gradient(135deg, ' + p.light + ' 0 55%, color-mix(in srgb, ' + p.accent + ' 32%, ' + p.dark + ') 55% 100%)'
+            sw.style.borderLeft = '3px solid ' + p.accent
+            const nm = document.createElement('div'); nm.className = 'dshMobThemePresetName'; nm.textContent = p.name
+            cell.appendChild(sw); cell.appendChild(nm)
+            cell.addEventListener('click', () => { const st = readState(); st.theme = p.id; st.accent = ''; writeState(st); apply(st) })
+            grid.appendChild(cell)
+          }
+          sheet.appendChild(grid)
+          const pl = document.createElement('div'); pl.className = 'dshMobThemePalLabel'; pl.textContent = '主题色'
+          sheet.appendChild(pl)
+          const pal = document.createElement('div'); pal.className = 'dshMobThemePalette'
+          for (const c of DOTS) {
+            const d = document.createElement('button')
+            d.type = 'button'; d.className = 'dshMobThemeDot'; d.setAttribute('data-dot', c)
+            d.style.background = c
+            d.addEventListener('click', () => { const st = readState(); st.accent = c; st.theme = ''; writeState(st); apply(st) })
+            pal.appendChild(d)
+          }
+          sheet.appendChild(pal)
+          const close = document.createElement('button'); close.type = 'button'; close.className = 'dshMobThemeClose'; close.textContent = '完成'
+          close.addEventListener('click', closeSheet)
+          sheet.appendChild(close)
+          mask.appendChild(sheet)
+          mask.addEventListener('click', (e) => { if (e.target === mask) closeSheet() })
+          document.body.appendChild(mask)
+        }
+        mask.setAttribute('data-open', 'true')
+        syncBar(readState())
+      }
+      const closeSheet = () => { if (mask) mask.setAttribute('data-open', 'false') }
+
+      const ensureBar = () => {
+        if (!mobileDomAllowed()) { if (bar && bar.isConnected) bar.remove(); bar = null; return }
+        const cubeRow = document.querySelector('[aria-modal="true"] [class*="_cubeRow"]')
+        if (!cubeRow) { if (bar && bar.isConnected) bar.remove(); bar = null; return }
+        if (bar && bar.isConnected && bar.parentElement === cubeRow.parentElement) return
+        if (bar) bar.remove()
+        bar = document.createElement('div')
+        bar.className = 'dshMobThemeBar'
+        const mk = (mode, label) => {
+          const b = document.createElement('button'); b.type = 'button'; b.className = 'dshMobThemeBtn'
+          b.setAttribute('data-mode', mode); b.textContent = label
+          b.addEventListener('click', onBar)
+          return b
+        }
+        bar.appendChild(mk('lightdark', '浅色'))
+        bar.appendChild(mk('system', '跟随系统'))
+        bar.appendChild(mk('custom', '自定义'))
+        cubeRow.after(bar)
+        apply(readState())
+      }
+
+      const ensureTheme = () => {
+        // idempotent re-apply: if React removed our dark flag / theme attr, put it back.
+        if (!mobileDomAllowed()) return
+        const s = readState()
+        const dark = isDark(s)
+        const hasDark = document.body.hasAttribute('data-ds-dark-theme')
+        if (dark && !hasDark) document.body.setAttribute('data-ds-dark-theme', '')
+        else if (!dark && hasDark) document.body.removeAttribute('data-ds-dark-theme')
+        if (s.theme) { if (document.documentElement.getAttribute('data-dsh-theme') !== s.theme) document.documentElement.setAttribute('data-dsh-theme', s.theme) }
+        else if (s.accent) { if (document.documentElement.getAttribute('data-dsh-theme') !== 'accent') document.documentElement.setAttribute('data-dsh-theme', 'accent') }
+        else if (document.documentElement.hasAttribute('data-dsh-theme')) document.documentElement.removeAttribute('data-dsh-theme')
+      }
+
+      const setupMobile = () => {
+        if (!bodyObs) bodyObs = new MutationObserver(() => { ensureBar(); ensureTheme() })
+        bodyObs.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-ds-dark-theme'] })
+        if (window.matchMedia && !sysMql) {
+          sysMql = window.matchMedia('(prefers-color-scheme: dark)')
+          const onSys = () => { const s = readState(); if (s.mode === 'system') apply(s) }
+          sysMql.addEventListener('change', onSys)
+          sysMql._dshOn = onSys
+        }
+        apply(readState())
+        ensureBar()
+      }
+      const teardownMobile = () => {
+        if (bodyObs) { bodyObs.disconnect(); bodyObs = null }
+        if (sysMql && sysMql._dshOn) { sysMql.removeEventListener('change', sysMql._dshOn); sysMql._dshOn = null; sysMql = null }
+        if (bar && bar.isConnected) bar.remove()
+        bar = null
+        if (mask && mask.isConnected) mask.remove()
+        mask = null
+        // Restore the app to DSH's native look when leaving mobile (desktop untouched).
+        // The palette vars / dark flag are mobile-only; the chosen theme persists in
+        // localStorage for the next mobile visit.
+        document.body.removeAttribute('data-ds-dark-theme')
+        const html = document.documentElement
+        html.removeAttribute('data-dsh-theme')
+        html.style.removeProperty('--dsh-theme-accent')
+        html.classList.remove('dsh-dark')
+      }
+      const onMq = () => {
+        const next = mobileDomAllowed()
+        if (next === mobile) return
+        mobile = next
+        if (mobile) setupMobile()
+        else teardownMobile()
+      }
+      try {
+        if (window.matchMedia) {
+          mql = window.matchMedia(MOBILE_MQ)
+          if (mql.addEventListener) mql.addEventListener('change', onMq)
+          else if (mql.addListener) mql.addListener(onMq)
+        }
+      } catch (_) {}
+      mobile = mobileDomAllowed()
+      if (mobile) setupMobile()
+
+      return () => {
+        alive = false
+        teardownMobile()
+        try {
+          if (mql) {
+            if (mql.removeEventListener) mql.removeEventListener('change', onMq)
+            else if (mql.removeListener) mql.removeListener(onMq)
+          }
+        } catch (_) {}
+      }
+    }
+
     function apply(ctx) {
       ensureStyle()
       ctx.effect(
@@ -2844,6 +3226,7 @@ window.__ModuleLoader__.load({
         'dsh-webui-mobile: subagent-crumb-rename',
       )
       ctx.effect(installModelEditorTooltip, 'dsh-webui-mobile: model-editor-tooltip')
+      ctx.effect(installThemeCustom, 'dsh-webui-mobile: theme-custom')
       ctx.effect(installSettingsHeaderReparent, 'dsh-webui-mobile: settings-header-reparent')
       ctx.effect(installSettingsConfigRow, 'dsh-webui-mobile: settings-config-row')
       ctx.effect(installPopupZGuard, 'dsh-webui-mobile: popup-z-guard')
