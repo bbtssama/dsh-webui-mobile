@@ -2647,25 +2647,16 @@ window.__ModuleLoader__.load({
             continue
           }
           const value = input.value ?? ''
+          // Remove any sidecar node injected by an earlier build. Injecting a node
+          // after a React-managed input is REMOVED by React on the next render and
+          // re-inserted by our observer — an infinite remove/insert loop that shows
+          // as high-frequency flicker/ghosting (repro: 添加模型). So we only use the
+          // title tooltip attribute, which React never reconciles away.
+          const prev = input.nextElementSibling
+          if (prev && prev.hasAttribute('data-dsh-sidecar')) prev.remove()
           // Tooltip: full value on hover / long-press.
           if (value && input.getAttribute('title') !== value) input.setAttribute('title', value)
           else if (!value && input.getAttribute('title')) input.removeAttribute('title')
-          // Sidecar: a read-only wrapping line with the full value if it overflows.
-          const overflow = value && input.scrollWidth > input.clientWidth + 1
-          const existing = input.nextElementSibling
-          if (overflow) {
-            if (!existing || !existing.hasAttribute('data-dsh-sidecar')) {
-              const side = document.createElement('div')
-              side.setAttribute('data-dsh-sidecar', 'true')
-              side.textContent = value
-              side.style.cssText = 'font-size:12px;line-height:16px;color:var(--dsw-alias-label-tertiary,#9aa0a8);white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;max-width:100%;padding:1px 0;'
-              input.insertAdjacentElement('afterend', side)
-            } else {
-              existing.textContent = value
-            }
-          } else if (existing && existing.hasAttribute('data-dsh-sidecar')) {
-            existing.remove()
-          }
         }
       }
 
@@ -2677,7 +2668,7 @@ window.__ModuleLoader__.load({
 
       const setupMobile = () => {
         if (!bodyObs) bodyObs = new MutationObserver(schedule)
-        bodyObs.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['value'], characterData: true })
+        bodyObs.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['value'] })
         schedule()
       }
       const teardownMobile = () => {
