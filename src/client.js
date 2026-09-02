@@ -1399,6 +1399,31 @@ window.__ModuleLoader__.load({
     font-size: calc(14px * var(--dsw-chat-font-scale, 1)) !important;
     line-height: calc(1.7 * var(--dsw-chat-font-scale, 1)) !important;
   }
+  /* Markdown/rich-text HEADINGS scale with the zoom too (each keeps its hierarchy). */
+  html.${HTML_CLASS} [class*="_flowItem"] h1,
+  html.${HTML_CLASS} [class*="_userRow"] h1 {
+    font-size: calc(24px * var(--dsw-chat-font-scale, 1)) !important;
+    line-height: calc(1.3 * var(--dsw-chat-font-scale, 1)) !important;
+  }
+  html.${HTML_CLASS} [class*="_flowItem"] h2,
+  html.${HTML_CLASS} [class*="_userRow"] h2 {
+    font-size: calc(20px * var(--dsw-chat-font-scale, 1)) !important;
+    line-height: calc(1.35 * var(--dsw-chat-font-scale, 1)) !important;
+  }
+  html.${HTML_CLASS} [class*="_flowItem"] h3,
+  html.${HTML_CLASS} [class*="_userRow"] h3 {
+    font-size: calc(17px * var(--dsw-chat-font-scale, 1)) !important;
+    line-height: calc(1.4 * var(--dsw-chat-font-scale, 1)) !important;
+  }
+  html.${HTML_CLASS} [class*="_flowItem"] h4,
+  html.${HTML_CLASS} [class*="_flowItem"] h5,
+  html.${HTML_CLASS} [class*="_flowItem"] h6,
+  html.${HTML_CLASS} [class*="_userRow"] h4,
+  html.${HTML_CLASS} [class*="_userRow"] h5,
+  html.${HTML_CLASS} [class*="_userRow"] h6 {
+    font-size: calc(15px * var(--dsw-chat-font-scale, 1)) !important;
+    line-height: calc(1.5 * var(--dsw-chat-font-scale, 1)) !important;
+  }
   html.${HTML_CLASS} [class*="_flowItem"] pre,
   html.${HTML_CLASS} [class*="_flowItem"] code,
   html.${HTML_CLASS} [class*="_userRow"] code {
