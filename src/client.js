@@ -1471,67 +1471,6 @@ window.__ModuleLoader__.load({
     padding: calc(6px * var(--dsw-chat-font-scale, 1)) !important;
   }
 
-  /* Fold button — same 28px pill / radius / color / hover as the native message action
-     buttons, placed inline at the far right of the action row. */
-  html.${HTML_CLASS} .dshMobFoldBtn {
-    appearance: none !important;
-    border: none !important;
-    background: transparent !important;
-    color: var(--dsw-alias-label-tertiary, #81858c) !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 28px !important;
-    height: 28px !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    border-radius: 28px !important;
-    cursor: pointer !important;
-    -webkit-tap-highlight-color: transparent !important;
-    touch-action: manipulation !important;
-    user-select: none !important;
-    -webkit-user-select: none !important;
-    flex: none !important;
-  }
-  html.${HTML_CLASS} .dshMobFoldBtn svg { display: block !important; width: 16px !important; height: 16px !important; }
-  html.${HTML_CLASS} .dshMobFoldBtn:active { background: var(--dsw-alias-interactive-bg-hover, rgba(0,0,0,.05)) !important; }
-  /* Folded text reuses the message body font-size / line-height (calc from the same
-     scale var), so a folded message matches the original, and AI == user. */
-  html.${HTML_CLASS} .dshMobFoldText {
-    font-size: calc(14px * var(--dsw-chat-font-scale, 1)) !important;
-    line-height: calc(1.7 * var(--dsw-chat-font-scale, 1)) !important;
-    white-space: pre-wrap !important;
-    word-break: break-word !important;
-    overflow-wrap: anywhere !important;
-  }
-  html.${HTML_CLASS} .dshMobFoldBar {
-    appearance: none !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    min-width: 34px !important;
-    height: 22px !important;
-    margin: 0 4px !important;
-    padding: 0 8px !important;
-    border-radius: 999px !important;
-    border: none !important;
-    background: var(--dsw-alias-bg-overlay, #e9ecf2) !important;
-    color: var(--dsw-alias-label-secondary, #61666b) !important;
-    font-size: calc(14px * var(--dsw-chat-font-scale, 1)) !important;
-    line-height: 1 !important;
-    vertical-align: middle !important;
-    cursor: pointer !important;
-    -webkit-tap-highlight-color: transparent !important;
-    touch-action: manipulation !important;
-  }
-  /* Folded message body: clamp to a block so the bar row sits inline with the text. */
-  html.${HTML_CLASS} [data-dsh-folded="true"] .dshMobFoldText {
-    display: inline !important;
-    white-space: pre-wrap !important;
-    word-break: break-word !important;
-    overflow-wrap: anywhere !important;
-  }
-
   /* Zoom bottom-sheet (reuses the theme sheet look; z above the lifted sidebar). */
   html.${HTML_CLASS} .dshMobZoomMask {
     position: fixed !important; inset: 0 !important; z-index: 1300 !important;
@@ -3842,7 +3781,6 @@ window.__ModuleLoader__.load({
       ctx.effect(installModelEditorTooltip, 'dsh-webui-mobile: model-editor-tooltip')
       ctx.effect(installThemeCustom, 'dsh-webui-mobile: theme-custom')
       ctx.effect(installZoom, 'dsh-webui-mobile: zoom')
-      ctx.effect(installMessageFold, 'dsh-webui-mobile: message-fold')
       ctx.effect(installSettingsHeaderReparent, 'dsh-webui-mobile: settings-header-reparent')
       ctx.effect(installSettingsConfigRow, 'dsh-webui-mobile: settings-config-row')
       ctx.effect(installPopupZGuard, 'dsh-webui-mobile: popup-z-guard')
