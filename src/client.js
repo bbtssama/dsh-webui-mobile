@@ -1601,10 +1601,11 @@ window.__ModuleLoader__.load({
      them frees the bottom space so the input area moves down (no blank bar). */
   html.${HTML_CLASS}[data-dsh-stats1="0"] [data-dsh-line="1"] { display: none !important; }
   html.${HTML_CLASS}[data-dsh-stats2="0"] [data-dsh-line="2"] { display: none !important; }
-  /* 首 token row: DSH ships it display:none (data is available via API) — reveal it,
-     and give it its OWN toggle (independent of the 轮·步·LLM line). */
-  html.${HTML_CLASS} [data-dsh-ftoken="1"] { display: inline-block !important; }
-  html.${HTML_CLASS}[data-dsh-ftok="0"] [data-dsh-ftoken="1"] { display: none !important; }
+  /* 首 token = own line (3): same hide/reveal mechanism as line1/line2. The reveal rule
+     carries the [data-dsh-stats3="1"] prefix the same way the initial working version
+     did (DSH ships this span display:none — data is available via its API). */
+  html.${HTML_CLASS}[data-dsh-stats3="0"] [data-dsh-line="3"] { display: none !important; }
+  html.${HTML_CLASS}[data-dsh-stats3="1"] [data-dsh-line="3"] { display: inline-block !important; }
   /* Upload-image button (composer, top-right) toggle. */
   html.${HTML_CLASS}[data-dsh-upload="0"] .dshMobImg_btn { display: none !important; }
   /* WebUI tools app tiles: dimmed when their feature is switched off. */
@@ -3647,22 +3648,32 @@ window.__ModuleLoader__.load({
         if (root) {
           const re1 = /轮|步|LLM|工具调用|首\s*token|tok\/s/i
           const re2 = /缓存命中|输入|输出/i
+          const ftokenMatch = (t) => (t.indexOf('首') !== -1 && t.toLowerCase().indexOf('token') !== -1) || (t.indexOf('tok/s') !== -1 && t.indexOf('平均') !== -1)
           for (const el of root.children) {
             if (!(el instanceof HTMLElement)) continue
             const t = (el.textContent || '').trim()
+            // 首 token = its OWN line (3) — exactly like the line1/line2 mechanism:
+            // tagged data-dsh-line="3" + revealed by the [data-dsh-stats3="1"] rule
+            // (which is the same approach as the other two working toggles).
+            if (ftokenMatch(t)) {
+              el.setAttribute('data-dsh-ftoken', '1')
+              el.setAttribute('data-dsh-line', '3')
+              el.style.removeProperty('display')
+              continue
+            }
+            if (el.hasAttribute('data-dsh-ftoken')) {
+              el.removeAttribute('data-dsh-ftoken')
+            }
             let line = 0
             if (re2.test(t)) line = 2
             else if (re1.test(t)) line = 1
-            if ((el.className || '').toString().includes('sep')) line = line || (el.previousElementSibling ? (el.previousElementSibling.getAttribute('data-dsh-line') || 0) : 0)
+            if ((el.className || '').toString().includes('sep')) {
+              const pv = el.previousElementSibling
+              if (pv && pv.hasAttribute('data-dsh-ftoken')) { el.setAttribute('data-dsh-ftoken', '1'); el.removeAttribute('data-dsh-line'); continue }
+              line = line || (pv ? (pv.getAttribute('data-dsh-line') || 0) : 0)
+            }
             if (line) el.setAttribute('data-dsh-line', String(line))
             else el.removeAttribute('data-dsh-line')
-            // DSH ships "首 token 平均 Xs · Y tok/s" as display:none — reveal it (it has an
-            // API/interface; it belongs to the 轮·步·LLM·工具调用 line).
-            if ((t.indexOf('首') !== -1 && t.indexOf('token') !== -1) || (t.indexOf('tok/s') !== -1 && t.indexOf('平均') !== -1)) {
-              el.setAttribute('data-dsh-ftoken', '1')
-            } else if (el.getAttribute('data-dsh-ftoken')) {
-              el.removeAttribute('data-dsh-ftoken')
-            }
           }
         }
       }
@@ -3671,8 +3682,8 @@ window.__ModuleLoader__.load({
         // default: both lines SHOWN (line1/line2 undefined → shown; only false hides)
         document.documentElement.setAttribute('data-dsh-stats1', r.line1 === false ? '0' : '1')
         document.documentElement.setAttribute('data-dsh-stats2', r.line2 === false ? '0' : '1')
-        // 首 token row is its OWN toggle (default shown)
-        document.documentElement.setAttribute('data-dsh-ftok', r.ftoken === false ? '0' : '1')
+        // 首 token row is its OWN toggle (line3, default shown)
+        document.documentElement.setAttribute('data-dsh-stats3', r.ftoken === false ? '0' : '1')
       }
       const refreshMenuItems = () => {
         const t = readTools()
