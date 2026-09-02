@@ -1439,6 +1439,28 @@ window.__ModuleLoader__.load({
     font-size: calc(14px * var(--dsw-chat-font-scale, 1)) !important;
     line-height: calc(1.5 * var(--dsw-chat-font-scale, 1)) !important;
   }
+  /* Trace / tool-command rows ("Edit · path", "Read · path", "Tool call …") render in a
+     _callRow container with file-link BUTTONs — scale their text + buttons too, so the
+     command labels reflow with the rest of the chat. */
+  html.${HTML_CLASS} [class*="_callRow"] button,
+  html.${HTML_CLASS} [class*="_callRow"] [class*="fileLink"],
+  html.${HTML_CLASS} [class*="_callRow"] [class*="_title"],
+  html.${HTML_CLASS} [class*="_callRow"] [class*="_name"],
+  html.${HTML_CLASS} [class*="_callRow"] p,
+  html.${HTML_CLASS} [class*="_callRow"] span,
+  html.${HTML_CLASS} [class*="_callRow"] div {
+    font-size: calc(14px * var(--dsw-chat-font-scale, 1)) !important;
+    line-height: calc(1.5 * var(--dsw-chat-font-scale, 1)) !important;
+  }
+  html.${HTML_CLASS} [class*="_callRow"] svg,
+  html.${HTML_CLASS} [class*="_callRow"] [class*="fileLink"] svg {
+    width: calc(16px * var(--dsw-chat-font-scale, 1)) !important;
+    height: calc(16px * var(--dsw-chat-font-scale, 1)) !important;
+  }
+  html.${HTML_CLASS} [class*="_callRow"] [class*="_summary"] {
+    font-size: calc(12px * var(--dsw-chat-font-scale, 1)) !important;
+    line-height: calc(1.4 * var(--dsw-chat-font-scale, 1)) !important;
+  }
   html.${HTML_CLASS} [class*="_tool"] svg,
   html.${HTML_CLASS} [class*="_context"] svg,
   html.${HTML_CLASS} [class*="_inject"] svg,
