@@ -1461,6 +1461,28 @@ window.__ModuleLoader__.load({
     font-size: calc(12px * var(--dsw-chat-font-scale, 1)) !important;
     line-height: calc(1.4 * var(--dsw-chat-font-scale, 1)) !important;
   }
+  /* Tool-call / think / context ROW CONTAINERS: their vertical padding + gaps are
+     native fixed px, so even though the text font/line-height shrinks, the rows
+     still LOOK tall at small font. Scale their block padding + row gaps too. */
+  html.${HTML_CLASS} [class*="_callRow"] [class*="_row"],
+  html.${HTML_CLASS} [data-variant="think"] [class*="_row"],
+  html.${HTML_CLASS} [class*="_toolCall"] [class*="_row"],
+  html.${HTML_CLASS} [class*="_contextInj"] [class*="_row"],
+  html.${HTML_CLASS} [class*="_context"] [class*="_row"],
+  html.${HTML_CLASS} [class*="_callRow"] [class*="_root"],
+  html.${HTML_CLASS} [data-variant="think"] [class*="_root"] {
+    padding-block: calc(6px * var(--dsw-chat-font-scale, 1)) !important;
+    column-gap: calc(6px * var(--dsw-chat-font-scale, 1)) !important;
+    row-gap: calc(4px * var(--dsw-chat-font-scale, 1)) !important;
+  }
+  html.${HTML_CLASS} [class*="_callRow"],
+  html.${HTML_CLASS} [data-variant="think"],
+  html.${HTML_CLASS} [class*="_toolCall"],
+  html.${HTML_CLASS} [class*="_contextInj"],
+  html.${HTML_CLASS} [class*="_context"] {
+    margin-block: calc(2px * var(--dsw-chat-font-scale, 1)) !important;
+    line-height: calc(1.6 * var(--dsw-chat-font-scale, 1)) !important;
+  }
   html.${HTML_CLASS} [class*="_tool"] svg,
   html.${HTML_CLASS} [class*="_context"] svg,
   html.${HTML_CLASS} [class*="_inject"] svg,
@@ -1525,32 +1547,39 @@ window.__ModuleLoader__.load({
     -webkit-tap-highlight-color: transparent !important; touch-action: manipulation !important;
   }
 
-  /* Whale-FAB long-press → primary function MENU (array-driven, extensible). */
+  /* Whale-FAB long-press → primary function MENU (array-driven, extensible).
+     Centered popover card (not a bottom sheet) with a light pop-in animation. */
   html.${HTML_CLASS} .dshMobFuncMask {
     position: fixed !important; inset: 0 !important; z-index: 1350 !important;
     background: var(--dsw-alias-bg-mask-1, rgba(15,17,21,.5)) !important;
-    display: none !important; align-items: flex-end !important; justify-content: center !important;
-    padding: 12px !important; box-sizing: border-box !important;
+    display: none !important; align-items: center !important; justify-content: center !important;
+    padding: 24px !important; box-sizing: border-box !important;
   }
   html.${HTML_CLASS} .dshMobFuncMask[data-open="true"] { display: flex !important; }
   html.${HTML_CLASS} .dshMobFuncSheet {
-    width: 100% !important; max-width: 400px !important;
+    width: min(100%, 320px) !important;
     background: var(--dsw-alias-bg-layer-2, var(--dsw-alias-bg-base, #fff)) !important;
-    border-radius: 18px !important;
-    padding: 14px 12px calc(14px + env(safe-area-inset-bottom, 0px)) !important;
-    box-shadow: var(--dsw-shadow-lv3, 0 12px 40px rgba(0,0,0,.2)) !important;
+    border-radius: 22px !important;
+    padding: 16px !important;
+    box-shadow: var(--dsw-shadow-lv3, 0 18px 56px rgba(0,0,0,.28)) !important;
+    animation: dshMobPop .18s ease !important;
   }
-  html.${HTML_CLASS} .dshMobFuncTitle { margin: 2px 4px 8px !important; font-size: 14px !important; font-weight: 700 !important; color: var(--dsw-alias-label-primary, #0f1115) !important; }
+  @keyframes dshMobPop {
+    from { opacity: 0; transform: scale(.94) translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+  html.${HTML_CLASS} .dshMobFuncTitle { margin: 2px 6px 10px !important; font-size: 14px !important; font-weight: 700 !important; color: var(--dsw-alias-label-primary, #0f1115) !important; letter-spacing: .02em !important; }
   html.${HTML_CLASS} .dshMobFuncList { display: flex !important; flex-direction: column !important; gap: 8px !important; }
   html.${HTML_CLASS} .dshMobFuncItem {
     display: flex !important; align-items: center !important; gap: 12px !important;
     width: 100% !important; padding: 12px !important; text-align: left !important;
-    border: 1px solid var(--dsw-alias-border-l2, rgba(0,0,0,.12)) !important; border-radius: 14px !important;
+    border: 1px solid var(--dsw-alias-border-l2, rgba(0,0,0,.08)) !important; border-radius: 16px !important;
     background: var(--dsw-alias-bg-layer-1, #fff) !important; color: var(--dsw-alias-label-primary, #0f1115) !important;
     cursor: pointer !important; -webkit-tap-highlight-color: transparent !important; touch-action: manipulation !important; user-select: none !important; -webkit-user-select: none !important;
+    transition: background .15s ease, transform .1s ease !important;
   }
-  html.${HTML_CLASS} .dshMobFuncItem:active { background: var(--dsw-alias-interactive-bg-hover, rgba(0,0,0,.05)) !important; }
-  html.${HTML_CLASS} .dshMobFuncIcon { display: inline-flex !important; align-items: center !important; justify-content: center !important; width: 36px !important; height: 36px !important; border-radius: 10px !important; background: color-mix(in srgb, var(--dsw-alias-state-business-primary, #4176e6) 12%, var(--dsw-alias-bg-base, #fff)) !important; color: var(--dsw-alias-state-business-primary, #4176e6) !important; flex: none !important; }
+  html.${HTML_CLASS} .dshMobFuncItem:active { background: var(--dsw-alias-interactive-bg-hover, rgba(0,0,0,.05)) !important; transform: scale(.985) !important; }
+  html.${HTML_CLASS} .dshMobFuncIcon { display: inline-flex !important; align-items: center !important; justify-content: center !important; width: 38px !important; height: 38px !important; border-radius: 12px !important; background: color-mix(in srgb, var(--dsw-alias-state-business-primary, #4176e6) 12%, var(--dsw-alias-bg-base, #fff)) !important; color: var(--dsw-alias-state-business-primary, #4176e6) !important; flex: none !important; }
   html.${HTML_CLASS} .dshMobFuncTxt { display: flex !important; flex-direction: column !important; gap: 2px !important; min-width: 0 !important; }
   html.${HTML_CLASS} .dshMobFuncLabel { font-size: 14px !important; font-weight: 600 !important; color: var(--dsw-alias-label-primary, #0f1115) !important; }
   html.${HTML_CLASS} .dshMobFuncDesc { font-size: 11.5px !important; color: var(--dsw-alias-label-tertiary, #81858c) !important; }
