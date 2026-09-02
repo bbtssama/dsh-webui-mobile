@@ -1576,9 +1576,15 @@ window.__ModuleLoader__.load({
      them frees the bottom space so the input area moves down (no blank bar). */
   html.${HTML_CLASS}[data-dsh-stats1="0"] [data-dsh-line="1"] { display: none !important; }
   html.${HTML_CLASS}[data-dsh-stats2="0"] [data-dsh-line="2"] { display: none !important; }
-  /* Reveal the DSH-hidden "首 token 平均 Xs · Y tok/s" (it ships display:none but has an
-     API) and keep it in the SAME row as the 轮·步·LLM·工具调用 info. */
-  html.${HTML_CLASS}[data-dsh-stats1="1"] [data-dsh-ftoken="1"] { display: inline-block !important; }
+  /* 首 token row: DSH ships it display:none (data is available via API) — reveal it,
+     and give it its OWN toggle (independent of the 轮·步·LLM line). */
+  html.${HTML_CLASS} [data-dsh-ftoken="1"] { display: inline-block !important; }
+  html.${HTML_CLASS}[data-dsh-ftok="0"] [data-dsh-ftoken="1"] { display: none !important; }
+  /* Upload-image button (composer, top-right) toggle. */
+  html.${HTML_CLASS}[data-dsh-upload="0"] .dshMobImg_btn { display: none !important; }
+  /* WebUI tools app tiles: dimmed when their feature is switched off. */
+  html.${HTML_CLASS} .dshMobFuncApp.off .dshMobFuncAppIcon { opacity: .4 !important; }
+  html.${HTML_CLASS} .dshMobFuncApp.off .dshMobFuncAppName { opacity: .5 !important; }
   @keyframes dshMobPop {
     from { opacity: 0; transform: scale(.94) translateY(8px); }
     to { opacity: 1; transform: none; }
@@ -2995,10 +3001,11 @@ window.__ModuleLoader__.load({
         }
       }
 
+      const crumbOff = () => { try { const s = JSON.parse(localStorage.getItem('dsh-webui-tools-v1') || 'null'); return !!(s && s.breadcrumb === false) } catch (_) { return false } }
       const applyRename = () => {
         raf = 0
         if (!alive) return
-        if (!mobileDomAllowed()) {
+        if (!mobileDomAllowed() || crumbOff()) {
           restoreNative()
           return
         }
@@ -3173,8 +3180,10 @@ window.__ModuleLoader__.load({
         document.addEventListener('click', onCrumbClick, true)
         document.addEventListener('pointerdown', onCrumbPointerDown, true)
         document.addEventListener('pointerdown', onDocPointerDown, true)
+        document.addEventListener('dsh-webui-tools-changed', onToolsChanged, true)
         schedule()
       }
+      const onToolsChanged = () => schedule()
 
       // Uninstall every mobile-only side effect and restore the native crumb DOM. Called
       // when the viewport leaves mobile, and on teardown. Desktop never sees mobile code.
@@ -3199,6 +3208,7 @@ window.__ModuleLoader__.load({
         document.removeEventListener('click', onCrumbClick, true)
         document.removeEventListener('pointerdown', onCrumbPointerDown, true)
         document.removeEventListener('pointerdown', onDocPointerDown, true)
+        document.removeEventListener('dsh-webui-tools-changed', onToolsChanged, true)
         revealedIndex = -1
         suppressClick = false
         mainCrumbEl = null
@@ -3559,8 +3569,19 @@ window.__ModuleLoader__.load({
       const MENU = [
         { id: 'zoom', label: '字号缩放', icon: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16M12 4v16"/></svg>' },
         { id: 'stats', label: '底栏信息', icon: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18M6 12h12M9 17h6"/></svg>' },
+        { id: 'crumb', label: '面包屑优化', icon: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h7M4 12h10M4 18h7M14 6h6M9 12h4M14 18h6"/></svg>' },
+        { id: 'uploadimg', label: '上传图片', icon: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h4l2-2h4l2 2h4v11H4z"/><circle cx="12" cy="13" r="3"/></svg>' },
         // future apps go here (grid is array-driven, extensible)
       ]
+      const TOOLS_STORE = 'dsh-webui-tools-v1'
+      const readTools = () => { try { const s = JSON.parse(localStorage.getItem(TOOLS_STORE) || 'null'); return (s && typeof s === 'object') ? s : {} } catch (_) { return {} } }
+      const writeTools = (o) => { try { localStorage.setItem(TOOLS_STORE, JSON.stringify(Object.assign({ ts: Date.now() }, o))) } catch (_) {} }
+      const applyToolsState = () => {
+        const t = readTools()
+        document.documentElement.setAttribute('data-dsh-crumb', t.breadcrumb === false ? '0' : '1')
+        document.documentElement.setAttribute('data-dsh-upload', t.uploadimg === false ? '0' : '1')
+        try { document.dispatchEvent(new CustomEvent('dsh-webui-tools-changed')) } catch (_) {}
+      }
       const STATS_STORE = 'dsh-mobile-stats-v1'
       const readStats = () => { try { const s = JSON.parse(localStorage.getItem(STATS_STORE) || 'null'); return (s && typeof s === 'object') ? s : {} } catch (_) { return {} } }
       const writeStats = (o) => { try { localStorage.setItem(STATS_STORE, JSON.stringify(Object.assign({ ts: Date.now() }, o))) } catch (_) {} }
@@ -3597,8 +3618,17 @@ window.__ModuleLoader__.load({
         // default: both lines SHOWN (line1/line2 undefined → shown; only false hides)
         document.documentElement.setAttribute('data-dsh-stats1', r.line1 === false ? '0' : '1')
         document.documentElement.setAttribute('data-dsh-stats2', r.line2 === false ? '0' : '1')
+        // 首 token row is its OWN toggle (default shown)
+        document.documentElement.setAttribute('data-dsh-ftok', r.ftoken === false ? '0' : '1')
       }
-      const refreshMenuItems = () => { /* app grid has no per-item desc; toggle states live in the stats panel */ }
+      const refreshMenuItems = () => {
+        const t = readTools()
+        for (const el of document.querySelectorAll('.dshMobFuncApp[data-act]')) {
+          const id = el.getAttribute('data-act')
+          if (id === 'crumb') el.classList.toggle('off', t.breadcrumb === false)
+          if (id === 'uploadimg') el.classList.toggle('off', t.uploadimg === false)
+        }
+      }
       const buildStats = () => {
         statsMask = document.createElement('div'); statsMask.className = 'dshMobStatsMask'
         const sheet = document.createElement('div'); sheet.className = 'dshMobStatsSheet'
@@ -3623,7 +3653,8 @@ window.__ModuleLoader__.load({
           sheet.appendChild(row)
         }
         mk('缓存命中 · 输入输出', 'line2')
-        mk('轮 · 步 · LLM · 工具调用 · 首 token', 'line1')
+        mk('轮 · 步 · LLM · 工具调用', 'line1')
+        mk('首 token 平均 · tok/s', 'ftoken')
         statsMask.appendChild(sheet)
         statsMask.addEventListener('click', (e) => { if (e.target === statsMask) closeStats() })
         document.body.appendChild(statsMask)
@@ -3678,10 +3709,18 @@ window.__ModuleLoader__.load({
         menuMask.addEventListener('click', (e) => { if (e.target === menuMask) closeMenu() })
         document.body.appendChild(menuMask)
       }
-      const openMenu = () => { if (!menuMask) buildMenu(); refreshMenuItems(); applyStats(); applyStatsState(); menuMask.setAttribute('data-open', 'true') }
+      const openMenu = () => { if (!menuMask) buildMenu(); refreshMenuItems(); applyStats(); applyStatsState(); applyToolsState(); menuMask.setAttribute('data-open', 'true') }
       const onMenuAct = (id) => {
         if (id === 'zoom') { closeMenu(); openZoom(); return }
         if (id === 'stats') { closeMenu(); openStats(); return }
+        if (id === 'crumb' || id === 'uploadimg') {
+          const t = readTools()
+          t[id === 'crumb' ? 'breadcrumb' : 'uploadimg'] = !(t[id === 'crumb' ? 'breadcrumb' : 'uploadimg'] === false)
+          writeTools(t)
+          applyToolsState()
+          refreshMenuItems()
+          return
+        }
       }
 
       const buildZoom = () => {
