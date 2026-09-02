@@ -1580,21 +1580,70 @@ window.__ModuleLoader__.load({
     from { opacity: 0; transform: scale(.94) translateY(8px); }
     to { opacity: 1; transform: none; }
   }
-  html.${HTML_CLASS} .dshMobFuncTitle { margin: 2px 6px 10px !important; font-size: 14px !important; font-weight: 700 !important; color: var(--dsw-alias-label-primary, #0f1115) !important; letter-spacing: .02em !important; }
-  html.${HTML_CLASS} .dshMobFuncList { display: flex !important; flex-direction: column !important; gap: 8px !important; }
-  html.${HTML_CLASS} .dshMobFuncItem {
-    display: flex !important; align-items: center !important; gap: 12px !important;
-    width: 100% !important; padding: 12px !important; text-align: left !important;
-    border: 1px solid var(--dsw-alias-border-l2, rgba(0,0,0,.08)) !important; border-radius: 16px !important;
-    background: var(--dsw-alias-bg-layer-1, #fff) !important; color: var(--dsw-alias-label-primary, #0f1115) !important;
-    cursor: pointer !important; -webkit-tap-highlight-color: transparent !important; touch-action: manipulation !important; user-select: none !important; -webkit-user-select: none !important;
+  html.${HTML_CLASS} .dshMobFuncTitle { margin: 2px 6px 12px !important; font-size: 14px !important; font-weight: 700 !important; color: var(--dsw-alias-label-primary, #0f1115) !important; letter-spacing: .02em !important; }
+  /* App grid: each tool is an app tile (icon + name), like a phone drawer. */
+  html.${HTML_CLASS} .dshMobFuncGrid {
+    display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 10px !important; overflow-y: auto !important; flex: 1 1 auto !important; min-height: 0 !important;
+    align-content: start !important;
+  }
+  html.${HTML_CLASS} .dshMobFuncApp {
+    display: flex !important; flex-direction: column !important; align-items: center !important; gap: 7px !important;
+    padding: 14px 6px !important; border: none !important; border-radius: 18px !important;
+    background: transparent !important; color: var(--dsw-alias-label-primary, #0f1115) !important;
+    cursor: pointer !important; -webkit-tap-highlight-color: transparent !important; touch-action: manipulation !important;
+    user-select: none !important; -webkit-user-select: none !important;
     transition: background .15s ease, transform .1s ease !important;
   }
-  html.${HTML_CLASS} .dshMobFuncItem:active { background: var(--dsw-alias-interactive-bg-hover, rgba(0,0,0,.05)) !important; transform: scale(.985) !important; }
-  html.${HTML_CLASS} .dshMobFuncIcon { display: inline-flex !important; align-items: center !important; justify-content: center !important; width: 38px !important; height: 38px !important; border-radius: 12px !important; background: color-mix(in srgb, var(--dsw-alias-state-business-primary, #4176e6) 12%, var(--dsw-alias-bg-base, #fff)) !important; color: var(--dsw-alias-state-business-primary, #4176e6) !important; flex: none !important; }
-  html.${HTML_CLASS} .dshMobFuncTxt { display: flex !important; flex-direction: column !important; gap: 2px !important; min-width: 0 !important; }
-  html.${HTML_CLASS} .dshMobFuncLabel { font-size: 14px !important; font-weight: 600 !important; color: var(--dsw-alias-label-primary, #0f1115) !important; }
-  html.${HTML_CLASS} .dshMobFuncDesc { font-size: 11.5px !important; color: var(--dsw-alias-label-tertiary, #81858c) !important; }
+  html.${HTML_CLASS} .dshMobFuncApp:active { background: var(--dsw-alias-interactive-bg-hover, rgba(0,0,0,.05)) !important; transform: scale(.96) !important; }
+  html.${HTML_CLASS} .dshMobFuncAppIcon {
+    display: inline-flex !important; align-items: center !important; justify-content: center !important;
+    width: 52px !important; height: 52px !important; border-radius: 16px !important;
+    background: color-mix(in srgb, var(--dsw-alias-state-business-primary, #4176e6) 12%, var(--dsw-alias-bg-base, #fff)) !important;
+    color: var(--dsw-alias-state-business-primary, #4176e6) !important; flex: none !important;
+  }
+  html.${HTML_CLASS} .dshMobFuncAppName { font-size: 12px !important; font-weight: 500 !important; color: var(--dsw-alias-label-primary, #0f1115) !important; text-align: center !important; }
+  /* 底栏信息 detail panel — DSH-native settings-card look (not cartoonish). */
+  html.${HTML_CLASS} .dshMobStatsMask {
+    position: fixed !important; inset: 0 !important; z-index: 1360 !important;
+    background: var(--dsw-alias-bg-mask-1, rgba(15,17,21,.5)) !important;
+    display: none !important; align-items: center !important; justify-content: center !important;
+    padding: 24px !important; box-sizing: border-box !important;
+  }
+  html.${HTML_CLASS} .dshMobStatsMask[data-open="true"] { display: flex !important; }
+  html.${HTML_CLASS} .dshMobStatsSheet {
+    width: min(100%, 320px) !important;
+    background: var(--dsw-alias-bg-layer-2, var(--dsw-alias-bg-base, #fff)) !important;
+    border-radius: 20px !important;
+    padding: 10px !important;
+    box-shadow: var(--dsw-shadow-lv2, 0 10px 36px rgba(0,0,0,.22)) !important;
+    animation: dshMobPop .18s ease !important;
+    user-select: none !important; -webkit-user-select: none !important;
+  }
+  html.${HTML_CLASS} .dshMobStatsSheet .dshMobFuncTitle { margin: 6px 10px 4px !important; }
+  html.${HTML_CLASS} .dshMobStatsRow {
+    display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 10px !important;
+    padding: 12px 10px !important; border-radius: 12px !important;
+  }
+  html.${HTML_CLASS} .dshMobStatsRow:active { background: var(--dsw-alias-interactive-bg-hover, rgba(0,0,0,.04)) !important; }
+  html.${HTML_CLASS} .dshMobStatsLabel { font-size: 13.5px !important; font-weight: 500 !important; color: var(--dsw-alias-label-primary, #0f1115) !important; }
+  html.${HTML_CLASS} .dshMobStatsSwitch {
+    position: relative !important; flex: none !important; width: 44px !important; height: 26px !important;
+    border-radius: 999px !important; border: none !important; padding: 0 !important;
+    background: var(--dsw-alias-bg-overlay, #e2e6ec) !important;
+    cursor: pointer !important; -webkit-tap-highlight-color: transparent !important; touch-action: manipulation !important;
+    transition: background .18s ease !important;
+  }
+  html.${HTML_CLASS} .dshMobStatsSwitch::after {
+    content: '' !important; position: absolute !important; top: 2px !important; left: 2px !important;
+    width: 22px !important; height: 22px !important; border-radius: 50% !important;
+    background: var(--dsw-alias-bg-base, #fff) !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,.25) !important;
+    transition: left .18s ease !important;
+  }
+  html.${HTML_CLASS} .dshMobStatsSwitch.on { background: var(--dsw-alias-state-success-primary, #07c160) !important; }
+  html.${HTML_CLASS} .dshMobStatsSwitch.on::after { left: 20px !important; }
+  html.${HTML_CLASS} .dshMobStatsSwitch[aria-checked="true"] { background: var(--dsw-alias-state-business-primary, #4176e6) !important; }
 }
 
 .dshMobMenu {
@@ -3505,10 +3554,9 @@ window.__ModuleLoader__.load({
       const EXPIRE = 3 * 24 * 3600 * 1000
       const MIN = 0.7, MAX = 1.5, STEP = 0.05
       const MENU = [
-        { id: 'zoom', label: '字号缩放', desc: '放大 / 缩小聊天文字', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16M12 4v16"/></svg>' },
-        { id: 'stats1', label: '缓存命中 · 输入输出', desc: '显示/隐藏 底栏缓存行', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18M6 12h12M9 17h6"/></svg>' },
-        { id: 'stats2', label: '轮·步·LLM·工具调用', desc: '显示/隐藏 底栏统计行', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3M12 3a9 9 0 1 0 9 9"/></svg>' },
-        // future functions go here (array-driven, extensible)
+        { id: 'zoom', label: '字号缩放', icon: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16M12 4v16"/></svg>' },
+        { id: 'stats', label: '底栏信息', icon: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18M6 12h12M9 17h6"/></svg>' },
+        // future apps go here (grid is array-driven, extensible)
       ]
       const STATS_STORE = 'dsh-mobile-stats-v1'
       const readStats = () => { try { const s = JSON.parse(localStorage.getItem(STATS_STORE) || 'null'); return (s && typeof s === 'object') ? s : {} } catch (_) { return {} } }
@@ -3539,16 +3587,47 @@ window.__ModuleLoader__.load({
         document.documentElement.setAttribute('data-dsh-stats1', r.line1 === false ? '0' : '1')
         document.documentElement.setAttribute('data-dsh-stats2', r.line2 === false ? '0' : '1')
       }
-      const refreshMenuItems = () => {
+      const refreshMenuItems = () => { /* app grid has no per-item desc; toggle states live in the stats panel */ }
+      const buildStats = () => {
+        statsMask = document.createElement('div'); statsMask.className = 'dshMobStatsMask'
+        const sheet = document.createElement('div'); sheet.className = 'dshMobStatsSheet'
+        const title = document.createElement('div'); title.className = 'dshMobFuncTitle'; title.textContent = '底栏信息'
+        sheet.appendChild(title)
+        const mk = (label, key) => {
+          const row = document.createElement('div'); row.className = 'dshMobStatsRow'
+          const l = document.createElement('span'); l.className = 'dshMobStatsLabel'; l.textContent = label
+          const sw = document.createElement('button'); sw.type = 'button'; sw.className = 'dshMobStatsSwitch'
+          sw.setAttribute('role', 'switch'); sw.setAttribute('data-line', key)
+          sw.addEventListener('click', (e) => {
+            e.stopPropagation()
+            const r = readStats()
+            r[key] = !(r[key] === false)
+            writeStats(r)
+            applyStatsState(r)
+            applyStats()
+            syncStatsToggles()
+          })
+          row.appendChild(l); row.appendChild(sw)
+          sheet.appendChild(row)
+        }
+        mk('缓存命中 · 输入输出', 'line2')
+        mk('轮 · 步 · LLM · 工具调用 · 首 token', 'line1')
+        statsMask.appendChild(sheet)
+        statsMask.addEventListener('click', (e) => { if (e.target === statsMask) closeStats() })
+        document.body.appendChild(statsMask)
+      }
+      const syncStatsToggles = () => {
         const r = readStats()
-        for (const el of document.querySelectorAll('.dshMobFuncItem[data-act]')) {
-          const id = el.getAttribute('data-act')
-          if (id === 'stats1') { const d = el.querySelector('.dshMobFuncDesc'); if (d) d.textContent = r.line1 === false ? '已关闭（当前隐藏）' : '已开启（当前显示）' }
-          if (id === 'stats2') { const d = el.querySelector('.dshMobFuncDesc'); if (d) d.textContent = r.line2 === false ? '已关闭（当前隐藏）' : '已开启（当前显示）' }
+        for (const sw of document.querySelectorAll('.dshMobStatsSwitch[data-line]')) {
+          const key = sw.getAttribute('data-line')
+          sw.setAttribute('aria-checked', r[key] === false ? 'false' : 'true')
+          sw.classList.toggle('on', r[key] !== false)
         }
       }
+      const openStats = () => { if (!statsMask) buildStats(); syncStatsToggles(); statsMask.setAttribute('data-open', 'true') }
+      const closeStats = () => { if (statsMask) statsMask.setAttribute('data-open', 'false') }
       let alive = true, mobile = false, mql = null
-      let menuMask = null, zoomMask = null
+      let menuMask = null, zoomMask = null, statsMask = null
       let longTimer = 0, suppressClick = false, downX = 0, downY = 0
 
       const readScale = () => {
@@ -3574,14 +3653,15 @@ window.__ModuleLoader__.load({
         const sheet = document.createElement('div'); sheet.className = 'dshMobFuncSheet'
         const title = document.createElement('div'); title.className = 'dshMobFuncTitle'; title.textContent = 'WebUI 工具'
         sheet.appendChild(title)
-        const list = document.createElement('div'); list.className = 'dshMobFuncList'
+        // App grid (each tool = an app tile, like a phone drawer — easy to extend).
+        const grid = document.createElement('div'); grid.className = 'dshMobFuncGrid'
         for (const it of MENU) {
-          const card = document.createElement('button'); card.type = 'button'; card.className = 'dshMobFuncItem'; card.setAttribute('data-act', it.id)
-          card.innerHTML = '<span class="dshMobFuncIcon">' + it.icon + '</span><span class="dshMobFuncTxt"><span class="dshMobFuncLabel">' + it.label + '</span><span class="dshMobFuncDesc">' + it.desc + '</span></span>'
-          card.addEventListener('click', (e) => { e.stopPropagation(); onMenuAct(it.id) })
-          list.appendChild(card)
+          const tile = document.createElement('button'); tile.type = 'button'; tile.className = 'dshMobFuncApp'; tile.setAttribute('data-act', it.id)
+          tile.innerHTML = '<span class="dshMobFuncAppIcon">' + it.icon + '</span><span class="dshMobFuncAppName">' + it.label + '</span>'
+          tile.addEventListener('click', (e) => { e.stopPropagation(); onMenuAct(it.id) })
+          grid.appendChild(tile)
         }
-        sheet.appendChild(list)
+        sheet.appendChild(grid)
         menuMask.appendChild(sheet)
         menuMask.addEventListener('click', (e) => { if (e.target === menuMask) closeMenu() })
         document.body.appendChild(menuMask)
@@ -3589,15 +3669,7 @@ window.__ModuleLoader__.load({
       const openMenu = () => { if (!menuMask) buildMenu(); refreshMenuItems(); applyStats(); applyStatsState(); menuMask.setAttribute('data-open', 'true') }
       const onMenuAct = (id) => {
         if (id === 'zoom') { closeMenu(); openZoom(); return }
-        if (id === 'stats1' || id === 'stats2') {
-          const r = readStats()
-          r[id === 'stats1' ? 'line1' : 'line2'] = !(r[id === 'stats1' ? 'line1' : 'line2'])
-          writeStats(r)
-          applyStatsState(r)
-          applyStats()
-          refreshMenuItems()
-          return
-        }
+        if (id === 'stats') { closeMenu(); openStats(); return }
       }
 
       const buildZoom = () => {
@@ -3676,6 +3748,7 @@ window.__ModuleLoader__.load({
         document.removeEventListener('dragstart', onDrag, true)
         if (menuMask && menuMask.isConnected) menuMask.remove(); menuMask = null
         if (zoomMask && zoomMask.isConnected) zoomMask.remove(); zoomMask = null
+        if (statsMask && statsMask.isConnected) statsMask.remove(); statsMask = null
         document.documentElement.style.removeProperty('--dsw-chat-font-scale')
         document.documentElement.removeAttribute('data-dsh-stats1')
         document.documentElement.removeAttribute('data-dsh-stats2')
