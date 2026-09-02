@@ -1462,7 +1462,9 @@ window.__ModuleLoader__.load({
     line-height: calc(1.4 * var(--dsw-chat-font-scale, 1)) !important;
   }
   /* Tool-call / think / context ROW CONTAINERS: keep only a TIGHT scaled spacing so
-     the rows shrink with the font without ballooning (previous base was too wide). */
+     the rows shrink with the font without ballooning (previous base was too wide).
+     Also clear the native fixed min-height that keeps these rows tall regardless of
+     the zoom — the row must hug its (scaled) content so spacing reflows. */
   html.${HTML_CLASS} [class*="_callRow"] [class*="_row"],
   html.${HTML_CLASS} [data-variant="think"] [class*="_row"],
   html.${HTML_CLASS} [class*="_toolCall"] [class*="_row"],
@@ -1473,6 +1475,8 @@ window.__ModuleLoader__.load({
     padding-block: calc(1px * var(--dsw-chat-font-scale, 1)) !important;
     row-gap: calc(2px * var(--dsw-chat-font-scale, 1)) !important;
     column-gap: calc(4px * var(--dsw-chat-font-scale, 1)) !important;
+    min-height: 0 !important;
+    height: auto !important;
   }
   html.${HTML_CLASS} [class*="_callRow"],
   html.${HTML_CLASS} [data-variant="think"],
@@ -1480,6 +1484,7 @@ window.__ModuleLoader__.load({
   html.${HTML_CLASS} [class*="_contextInj"],
   html.${HTML_CLASS} [class*="_context"] {
     line-height: calc(1.5 * var(--dsw-chat-font-scale, 1)) !important;
+    min-height: 0 !important;
   }
   html.${HTML_CLASS} [class*="_tool"] svg,
   html.${HTML_CLASS} [class*="_context"] svg,
