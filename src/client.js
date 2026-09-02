@@ -3659,43 +3659,65 @@ window.__ModuleLoader__.load({
       }
       // Fold the message's TEXT LEAVES only — think / tool / context blocks and the
       // actions row stay untouched, so collapsing hides the text but never the think.
-      const textLeaves = (body) => {
-        const cands = []
-        for (const el of body.querySelectorAll('*')) {
-          if (el.closest('[class*="_actions"]')) continue
-          if (el.closest('[data-variant="think"], [data-variant="tool"], [data-variant="toolCall"], [data-variant="reasoning"], summary, details')) continue
-          if (el.children.length) continue
-          if ((el.textContent || '').trim().length >= MIN_LEN) cands.push(el)
+      // Minimal fold units: consecutive text nodes in tree order, broken ONLY by
+      // think / tool / context / actions blocks (or message edges). Each unit folds
+      // itself to "first20 + bar + last20"; think/tool text is never touched.
+      const OUT_SEG = '[data-variant="think"], [data-variant="tool"], [data-variant="toolCall"], [data-variant="reasoning"], summary, details, [class*="_actions"]'
+      const textSegments = (body) => {
+        const segs = []
+        let cur = []
+        const w = document.createTreeWalker(body, NodeFilter.SHOW_TEXT)
+        let n
+        while ((n = w.nextNode())) {
+          const p = n.parentElement
+          if (!p || p.closest(OUT_SEG)) { if (cur.length) { segs.push(cur); cur = [] }; continue }
+          if (!(n.textContent || '').trim()) continue
+          cur.push(n)
         }
-        return cands.filter(el => !cands.some(a => a !== el && a.contains(el)))
+        if (cur.length) segs.push(cur)
+        return segs
       }
-      const foldLeaf = (leaf, key) => {
-        const t = (leaf.textContent || '').trim()
-        if (t.length <= MIN_LEN) return
+      const foldSeg = (nodes, key) => {
+        const text = nodes.map(x => x.textContent).join(' ').replace(/\s+/g, ' ').trim()
+        if (text.length <= MIN_LEN) return false
         const o = prune(); o[key] = { fold: true, ts: Date.now() }; writeAll(o)
-        if (leaf._dshOrig == null) leaf._dshOrig = leaf.innerHTML
-        const tcs = getComputedStyle(leaf); const fs = tcs.fontSize, lh = tcs.lineHeight
+        const host = nodes[0].parentElement
+        const tcs = getComputedStyle(host); const fs = tcs.fontSize, lh = tcs.lineHeight
         const mk = (txt) => { const s = document.createElement('span'); s.className = 'dshMobFoldText'; s.textContent = txt; s.style.fontSize = fs; s.style.lineHeight = lh; return s }
         const bar = document.createElement('button'); bar.className = 'dshMobFoldBar'; bar.type = 'button'; bar.textContent = '⋯'; bar.setAttribute('aria-label', '展开'); bar.style.fontSize = fs; bar.style.lineHeight = lh
-        leaf.textContent = ''
-        leaf.appendChild(mk(t.slice(0, HEAD))); leaf.appendChild(bar); leaf.appendChild(mk(t.slice(-TAIL)))
-        leaf.setAttribute('data-dsh-folded', 'true')
-        bar.addEventListener('click', (e) => { e.stopPropagation(); const o2 = prune(); delete o2[key]; writeAll(o2); expandLeaf(leaf) })
+        const line = document.createElement('span'); line.className = 'dshMobFoldSeg'; line.setAttribute('data-dsh-folded', 'true'); line.style.display = 'block'; line.style.overflowWrap = 'anywhere'
+        line.appendChild(mk(text.slice(0, HEAD))); line.appendChild(bar); line.appendChild(mk(text.slice(-TAIL)))
+        for (const nd of nodes) { if (nd.__dshFoldOrig == null) nd.__dshFoldOrig = nd.nodeValue; nd.nodeValue = '' }
+        host.insertBefore(line, nodes[0])
+        bar.addEventListener('click', (e) => { e.stopPropagation(); const o2 = prune(); delete o2[key]; writeAll(o2); expandSeg(nodes) })
+        return true
       }
-      const expandLeaf = (leaf) => {
-        if (leaf._dshOrig != null) leaf.innerHTML = leaf._dshOrig
-        leaf.removeAttribute?.('data-dsh-folded')
+      const expandSeg = (nodes) => {
+        for (const nd of nodes) if (nd.__dshFoldOrig != null) nd.nodeValue = nd.__dshFoldOrig
+        const host = nodes[0] && nodes[0].parentElement
+        if (host) for (const l of host.querySelectorAll('.dshMobFoldSeg')) l.remove()
       }
-      const foldBody = (body) => { for (const l of textLeaves(body)) foldLeaf(l, blockKey(l)) }
-      const expandBody = (body) => { for (const l of body.querySelectorAll('[data-dsh-folded="true"]')) expandLeaf(l) }
+      const foldBody = (body) => {
+        let any = false
+        for (const seg of textSegments(body)) if (foldSeg(seg, blockKey(seg[0]))) any = true
+        return any
+      }
+      const expandBody = (body) => {
+        const w = document.createTreeWalker(body, NodeFilter.SHOW_TEXT)
+        const nodes = []; let n
+        while ((n = w.nextNode())) if (n.__dshFoldOrig != null) nodes.push(n)
+        for (const nd of nodes) expandSeg([nd])
+      }
       const roleOf = (actionsRow) => (actionsRow.closest('[class*="_userRow"]') ? 'user' : 'ai')
       const blockKey = (b) => keyFor(b)
       const groupKey = (msgs) => { let s = ''; for (const m of msgs) s += (m.body.textContent || '').slice(0, 30); return 'g' + String(s.length) + '-' + hash(s) }
       const isGroupFolded = (g) => g.msgs.some((m) => !!m.body.querySelector('[data-dsh-folded="true"]'))
       const foldGroup = (g) => {
         const o = prune()
-        for (const m of g.msgs) foldBody(m.body)
-        o[groupKey(g.msgs)] = { fold: true, ts: Date.now() }; writeAll(o)
+        let foldedAny = false
+        for (const m of g.msgs) if (foldBody(m.body)) foldedAny = true
+        // only persist the folded state if at least one unit actually folded
+        if (foldedAny) { o[groupKey(g.msgs)] = { fold: true, ts: Date.now() }; writeAll(o) }
       }
       const expandGroup = (g) => {
         const o = prune()
