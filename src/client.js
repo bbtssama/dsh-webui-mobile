@@ -3662,19 +3662,25 @@ window.__ModuleLoader__.load({
       }
       // Fold the message's TEXT LEAVES only — think / tool / context blocks and the
       // actions row stay untouched, so collapsing hides the text but never the think.
-      // Minimal fold units: consecutive text nodes in tree order, broken ONLY by
-      // think / tool / context / actions blocks (or message edges). Each unit folds
-      // itself to "first20 + bar + last20"; think/tool text is never touched.
+      // Minimal fold units: consecutive text nodes in tree order, broken by
+      // think / tool / context / actions blocks AND by block-level boundaries
+      // (each <p>/<div>/<li>/… is its own unit), so a long rich-text message
+      // yields several foldable units instead of one merged segment.
       const OUT_SEG = '[data-variant="think"], [data-variant="tool"], [data-variant="toolCall"], [data-variant="reasoning"], summary, details, [class*="_actions"]'
+      const BLOCK_SEG = 'p, div, li, pre, blockquote, h1, h2, h3, h4, h5, h6, td'
       const textSegments = (body) => {
         const segs = []
         let cur = []
+        let lastBlock = null
         const w = document.createTreeWalker(body, NodeFilter.SHOW_TEXT)
         let n
         while ((n = w.nextNode())) {
           const p = n.parentElement
-          if (!p || p.closest(OUT_SEG)) { if (cur.length) { segs.push(cur); cur = [] }; continue }
+          if (!p || p.closest(OUT_SEG)) { if (cur.length) { segs.push(cur); cur = [] }; lastBlock = null; continue }
           if (!(n.textContent || '').trim()) continue
+          const block = p.closest(BLOCK_SEG) || p
+          if (lastBlock && block !== lastBlock) { if (cur.length) { segs.push(cur); cur = [] } }
+          lastBlock = block
           cur.push(n)
         }
         if (cur.length) segs.push(cur)
@@ -3713,47 +3719,43 @@ window.__ModuleLoader__.load({
       }
       const roleOf = (actionsRow) => (actionsRow.closest('[class*="_userRow"]') ? 'user' : 'ai')
       const blockKey = (b) => keyFor(b)
-      const groupKey = (msgs) => { let s = ''; for (const m of msgs) s += (m.body.textContent || '').slice(0, 30); return 'g' + String(s.length) + '-' + hash(s) }
-      const isGroupFolded = (g) => g.msgs.some((m) => !!m.body.querySelector('[data-dsh-folded="true"]'))
-      const foldGroup = (g) => {
+      const groupKey = (msgs) => { let s = ''; for (const m of msgs) s += (m.body ? m.body.textContent : '').slice(0, 30); return 'g' + String(s.length) + '-' + hash(s) }
+      const isGroupFolded = (g) => g.msgs.some((m) => m.body && !!m.body.querySelector('[data-dsh-folded="true"]'))
+      const foldGroup = (g, gk) => {
+        // FIX C: compute the persist key BEFORE folding (on unfolded text) so it
+        // matches what processMessage/restore computes at load time.
+        const key = gk || groupKey(g.msgs)
         const o = prune()
         let foldedAny = false
-        for (const m of g.msgs) if (foldBody(m.body)) foldedAny = true
-        // only persist the folded state if at least one unit actually folded
-        if (foldedAny) { o[groupKey(g.msgs)] = { fold: true, ts: Date.now() }; writeAll(o) }
+        for (const m of g.msgs) { if (!m.body) continue; if (foldBody(m.body)) foldedAny = true }
+        if (foldedAny) { o[key] = { fold: true, ts: Date.now() }; writeAll(o) }
       }
-      const expandGroup = (g) => {
+      const expandGroup = (g, gk) => {
+        const key = gk || groupKey(g.msgs)
         const o = prune()
-        for (const m of g.msgs) if (m.body.querySelector('[data-dsh-folded="true"]')) expandBody(m.body)
-        delete o[groupKey(g.msgs)]; writeAll(o)
+        for (const m of g.msgs) { if (m.body && m.body.querySelector('[data-dsh-folded="true"]')) expandBody(m.body) }
+        delete o[key]; writeAll(o)
       }
-      const toggleGroup = (g) => { if (isGroupFolded(g)) expandGroup(g); else foldGroup(g) }
-      // Rebuild the groups FRESH at click time (React re-renders; bodies captured at
-      // load can be stale) and toggle the group that owns this button. Defensive: match
-      // ANY message row in the group (not only the last), and fall back to the button's
-      // own message if no group matched, so a click never silently does nothing.
+      const toggleGroup = (g, gk) => { if (isGroupFolded(g)) expandGroup(g, gk); else foldGroup(g, gk) }
+      // Rebuild the group FRESH at click time (React re-renders; anchors captured at
+      // load can be stale). FIX B: the button carries __dshRow (its action row) and
+      // __dshGk (its group's persist key, computed on UNFOLDED text). Recover the row,
+      // expand it to the contiguous same-role run, and toggle that whole group — never
+      // depending on the button still being attached to the DOM.
       const toggleFromBtn = (btn) => {
         try {
-          const msgs = []
-          for (const actionsRow of document.querySelectorAll('[class*="_actions"]')) {
-            if (actionsRow.closest('[aria-modal="true"]')) continue
-            const p = pairFor(actionsRow)
-            if (!p) continue
-            msgs.push({ actionsRow, body: p.body, role: roleOf(actionsRow) })
-          }
-          const groups = []
-          for (const m of msgs) {
-            const last = groups[groups.length - 1]
-            if (last && last.role === m.role) last.msgs.push(m)
-            else groups.push({ role: m.role, msgs: [m] })
-          }
-          for (const g of groups) {
-            if (g.msgs.some(mm => mm.actionsRow.contains(btn))) { toggleGroup(g); return }
-          }
-          // fallback: toggle the single message that owns the button
-          const row = btn.closest('[class*="_actions"]')
-          const p = row ? pairFor(row) : null
-          if (p) { const g = { role: roleOf(row), msgs: [{ actionsRow: row, body: p.body, role: roleOf(row) }] }; toggleGroup(g) }
+          const row = (btn.__dshRow && document.contains(btn.__dshRow)) ? btn.__dshRow : btn.closest('[class*="_actions"]')
+          if (!row) return
+          const role = roleOf(row)
+          const all = [...document.querySelectorAll('[class*="_actions"]')].filter(ar => !ar.closest('[aria-modal="true"]'))
+          const msgs = all.map(ar => { const p = pairFor(ar); return { actionsRow: ar, body: p ? p.body : null, role: roleOf(ar) } })
+          let idx = all.indexOf(row)
+          if (idx < 0) { idx = msgs.findIndex(m => m.actionsRow === row) }
+          let start = idx, end = idx
+          while (start > 0 && msgs[start - 1].role === role) start--
+          while (end < msgs.length - 1 && msgs[end + 1].role === role) end++
+          const g = { role, msgs: msgs.slice(start, end + 1) }
+          toggleGroup(g, btn.__dshGk)
         } catch (_) { /* never leave a dead click */ }
       }
       const processMessage = () => {
@@ -3761,8 +3763,9 @@ window.__ModuleLoader__.load({
         for (const actionsRow of document.querySelectorAll('[class*="_actions"]')) {
           if (actionsRow.closest('[aria-modal="true"]')) continue
           const p = pairFor(actionsRow)
-          if (!p) continue
-          msgs.push({ actionsRow, body: p.body, role: roleOf(actionsRow) })
+          // keep the message in the list even when it has no body, so the
+          // same-role run (and its fold button coverage) stays continuous
+          msgs.push({ actionsRow, body: p ? p.body : null, role: roleOf(actionsRow) })
         }
         // group consecutive same-role messages; one fold button per group
         const groups = []
@@ -3775,17 +3778,22 @@ window.__ModuleLoader__.load({
         for (const g of groups) {
           const last = g.msgs[g.msgs.length - 1]
           const row = last.actionsRow
+          const gk = groupKey(g.msgs) // computed on UNFOLDED text (FIX C)
           if (!row.querySelector('.dshMobGroupFold')) {
             const b = document.createElement('button'); b.className = 'dshMobFoldBtn dshMobGroupFold'; b.type = 'button'
             b.setAttribute('aria-label', '折叠')
             // nicer two-line "collapse" icon, same linear style/size as the four buttons
             b.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9h14M5 15h14"/></svg>'
+            // FIX B: keep anchors on the button so a click still works after React
+            // re-renders / virtual-list churn (the DOM node may be detached).
+            b.__dshRow = row
+            b.__dshGk = gk
             b.addEventListener('click', (e) => { e.stopPropagation(); toggleFromBtn(b) })
             const actBtns = row.querySelectorAll('[class*="_action"]')
             const lastB = actBtns[actBtns.length - 1]
             if (lastB) lastB.after(b); else row.appendChild(b)
           }
-          if (o[groupKey(g.msgs)] && o[groupKey(g.msgs)].fold && !isGroupFolded(g)) foldGroup(g)
+          if (o[gk] && o[gk].fold && !isGroupFolded(g)) foldGroup(g, gk)
         }
       }
       const applyFold = () => {
