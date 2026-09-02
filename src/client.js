@@ -3617,8 +3617,11 @@ window.__ModuleLoader__.load({
         }
         const prev = item.previousElementSibling
         const prevText = prev ? (prev.textContent || '').trim() : ''
-        if (prev && (prev.className || '').toString().indexOf('_flowItem') !== -1 && prevText.length > MIN_LEN) {
-          // AI messages: body is the previous sibling flowItem (long text)
+        if (prev && (prev.className || '').toString().indexOf('_flowItem') !== -1) {
+          // AI messages: body is the previous sibling flowItem. Pair it even when short,
+          // so the message stays part of its same-role GROUP (a short tool/meta line must
+          // NOT break the run — the fold button covers every unit up to the previous
+          // button); foldBody simply finds no segment for a short body.
           return { item, body: prev }
         }
         // user message: walk up to the message row that holds a long leaf text (not the
