@@ -3707,6 +3707,11 @@ window.__ModuleLoader__.load({
         if (host) for (const l of host.querySelectorAll('.dshMobFoldSeg')) l.remove()
       }
       const foldBody = (body) => {
+        // Skip messages that are still streaming — React rewrites their text nodes as
+        // tokens append, which would instantly overwrite the folded state (looks like
+        // "no reaction"). Streamed/loading messages are settled implicitly once the
+        // streaming indicator is gone, and the restore path re-applies then.
+        if (body.closest('[class*="stream"], [class*="streaming"], [class*="_pending"], [class*="loading"], [class*="generating"]')) return false
         let any = false
         for (const seg of textSegments(body)) if (foldSeg(seg, blockKey(seg[0]))) any = true
         return any
