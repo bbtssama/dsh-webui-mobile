@@ -3535,15 +3535,16 @@ window.__ModuleLoader__.load({
       }
       const applyStatsState = (o) => {
         const r = o || readStats()
-        document.documentElement.setAttribute('data-dsh-stats1', r.line1 ? '1' : '0')
-        document.documentElement.setAttribute('data-dsh-stats2', r.line2 ? '1' : '0')
+        // default: both lines SHOWN (line1/line2 undefined → shown; only false hides)
+        document.documentElement.setAttribute('data-dsh-stats1', r.line1 === false ? '0' : '1')
+        document.documentElement.setAttribute('data-dsh-stats2', r.line2 === false ? '0' : '1')
       }
       const refreshMenuItems = () => {
         const r = readStats()
         for (const el of document.querySelectorAll('.dshMobFuncItem[data-act]')) {
           const id = el.getAttribute('data-act')
-          if (id === 'stats1') { const d = el.querySelector('.dshMobFuncDesc'); if (d) d.textContent = r.line1 ? '已开启（当前显示）' : '已关闭（当前隐藏）' }
-          if (id === 'stats2') { const d = el.querySelector('.dshMobFuncDesc'); if (d) d.textContent = r.line2 ? '已开启（当前显示）' : '已关闭（当前隐藏）' }
+          if (id === 'stats1') { const d = el.querySelector('.dshMobFuncDesc'); if (d) d.textContent = r.line1 === false ? '已关闭（当前隐藏）' : '已开启（当前显示）' }
+          if (id === 'stats2') { const d = el.querySelector('.dshMobFuncDesc'); if (d) d.textContent = r.line2 === false ? '已关闭（当前隐藏）' : '已开启（当前显示）' }
         }
       }
       let alive = true, mobile = false, mql = null
