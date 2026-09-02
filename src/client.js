@@ -1461,9 +1461,8 @@ window.__ModuleLoader__.load({
     font-size: calc(12px * var(--dsw-chat-font-scale, 1)) !important;
     line-height: calc(1.4 * var(--dsw-chat-font-scale, 1)) !important;
   }
-  /* Tool-call / think / context ROW CONTAINERS: their vertical padding + gaps are
-     native fixed px, so even though the text font/line-height shrinks, the rows
-     still LOOK tall at small font. Scale their block padding + row gaps too. */
+  /* Tool-call / think / context ROW CONTAINERS: keep only a TIGHT scaled spacing so
+     the rows shrink with the font without ballooning (previous base was too wide). */
   html.${HTML_CLASS} [class*="_callRow"] [class*="_row"],
   html.${HTML_CLASS} [data-variant="think"] [class*="_row"],
   html.${HTML_CLASS} [class*="_toolCall"] [class*="_row"],
@@ -1471,17 +1470,16 @@ window.__ModuleLoader__.load({
   html.${HTML_CLASS} [class*="_context"] [class*="_row"],
   html.${HTML_CLASS} [class*="_callRow"] [class*="_root"],
   html.${HTML_CLASS} [data-variant="think"] [class*="_root"] {
-    padding-block: calc(6px * var(--dsw-chat-font-scale, 1)) !important;
-    column-gap: calc(6px * var(--dsw-chat-font-scale, 1)) !important;
-    row-gap: calc(4px * var(--dsw-chat-font-scale, 1)) !important;
+    padding-block: calc(1px * var(--dsw-chat-font-scale, 1)) !important;
+    row-gap: calc(2px * var(--dsw-chat-font-scale, 1)) !important;
+    column-gap: calc(4px * var(--dsw-chat-font-scale, 1)) !important;
   }
   html.${HTML_CLASS} [class*="_callRow"],
   html.${HTML_CLASS} [data-variant="think"],
   html.${HTML_CLASS} [class*="_toolCall"],
   html.${HTML_CLASS} [class*="_contextInj"],
   html.${HTML_CLASS} [class*="_context"] {
-    margin-block: calc(2px * var(--dsw-chat-font-scale, 1)) !important;
-    line-height: calc(1.6 * var(--dsw-chat-font-scale, 1)) !important;
+    line-height: calc(1.5 * var(--dsw-chat-font-scale, 1)) !important;
   }
   html.${HTML_CLASS} [class*="_tool"] svg,
   html.${HTML_CLASS} [class*="_context"] svg,
