@@ -1653,6 +1653,28 @@ window.__ModuleLoader__.load({
   html.${HTML_CLASS} .dshMobStatsSwitch.on { background: var(--dsw-alias-state-success-primary, #07c160) !important; }
   html.${HTML_CLASS} .dshMobStatsSwitch.on::after { left: 20px !important; }
   html.${HTML_CLASS} .dshMobStatsSwitch[aria-checked="true"] { background: var(--dsw-alias-state-business-primary, #4176e6) !important; }
+  /* 关于 panel — DSH-native settings card with an intro + app explanations. */
+  html.${HTML_CLASS} .dshMobAboutMask {
+    position: fixed !important; inset: 0 !important; z-index: 1360 !important;
+    background: var(--dsw-alias-bg-mask-1, rgba(15,17,21,.5)) !important;
+    display: none !important; align-items: center !important; justify-content: center !important;
+    padding: 24px !important; box-sizing: border-box !important;
+  }
+  html.${HTML_CLASS} .dshMobAboutMask[data-open="true"] { display: flex !important; }
+  html.${HTML_CLASS} .dshMobAboutSheet {
+    width: min(100%, 340px) !important; max-height: 70vh !important; overflow-y: auto !important;
+    background: var(--dsw-alias-bg-layer-2, var(--dsw-alias-bg-base, #fff)) !important;
+    border-radius: 20px !important; padding: 14px !important;
+    box-shadow: var(--dsw-shadow-lv2, 0 10px 36px rgba(0,0,0,.22)) !important;
+    animation: dshMobPop .18s ease !important;
+    user-select: none !important; -webkit-user-select: none !important;
+  }
+  html.${HTML_CLASS} .dshMobAboutSheet .dshMobFuncTitle { margin: 6px 10px 4px !important; }
+  html.${HTML_CLASS} .dshMobAboutIntro { font-size: 12.5px !important; line-height: 1.6 !important; color: var(--dsw-alias-label-secondary, #5c6068) !important; padding: 8px 10px 10px !important; }
+  html.${HTML_CLASS} .dshMobAboutItem { padding: 10px 10px !important; border-top: 1px solid var(--dsw-alias-border-l2, rgba(0,0,0,.06)) !important; }
+  html.${HTML_CLASS} .dshMobAboutName { font-size: 13.5px !important; font-weight: 600 !important; color: var(--dsw-alias-label-primary, #0f1115) !important; margin-bottom: 3px !important; }
+  html.${HTML_CLASS} .dshMobAboutDesc { font-size: 12.5px !important; line-height: 1.6 !important; color: var(--dsw-alias-label-secondary, #5c6068) !important; }
+  html.${HTML_CLASS} .dshMobThemeClose { margin-top: 10px !important; }
 }
 
 .dshMobMenu {
@@ -3571,7 +3593,13 @@ window.__ModuleLoader__.load({
         { id: 'stats', label: '底栏信息', icon: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18M6 12h12M9 17h6"/></svg>' },
         { id: 'crumb', label: '面包屑优化', icon: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h7M4 12h10M4 18h7M14 6h6M9 12h4M14 18h6"/></svg>' },
         { id: 'uploadimg', label: '上传图片', icon: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h4l2-2h4l2 2h4v11H4z"/><circle cx="12" cy="13" r="3"/></svg>' },
-        // future apps go here (grid is array-driven, extensible)
+        // future apps go here (array-driven, extensible) — 关于 is pinned last in buildMenu
+      ]
+      const ABOUT = [
+        { name: '字号缩放', desc: '长按悬浮球或从通用设置打开 WebUI 工具，可放大/缩小聊天文字并自动重排（不模糊），设置会持久保存。' },
+        { name: '底栏信息', desc: '控制输入框下方底栏三行信息的显示：缓存命中·输入输出、轮·步·LLM·工具调用、首 token 平均·tok/s，每行独立开关。' },
+        { name: '面包屑优化', desc: '优化多级子代理的面包屑显示。使用 agentTeams 等插件时层级过多会显示拥挤：统一用单个大写字母代号，每个 A/B 代表上级代理的第 1/2 个子代理；点击代号会显示该层代理的真实名称，再点击则跳转/展开下级，点别处还原。' },
+        { name: '上传图片', desc: '显示/隐藏输入栏右上角的上传图片按钮。' },
       ]
       const TOOLS_STORE = 'dsh-webui-tools-v1'
       const readTools = () => { try { const s = JSON.parse(localStorage.getItem(TOOLS_STORE) || 'null'); return (s && typeof s === 'object') ? s : {} } catch (_) { return {} } }
@@ -3669,8 +3697,34 @@ window.__ModuleLoader__.load({
       }
       const openStats = () => { if (!statsMask) buildStats(); syncStatsToggles(); statsMask.setAttribute('data-open', 'true') }
       const closeStats = () => { if (statsMask) statsMask.setAttribute('data-open', 'false') }
+      const openAbout = () => {
+        if (!aboutMask) {
+          aboutMask = document.createElement('div'); aboutMask.className = 'dshMobAboutMask'
+          const sheet = document.createElement('div'); sheet.className = 'dshMobAboutSheet'
+          const title = document.createElement('div'); title.className = 'dshMobFuncTitle'; title.textContent = '关于'
+          sheet.appendChild(title)
+          const intro = document.createElement('div'); intro.className = 'dshMobAboutIntro'
+          intro.textContent = 'dsh-webui-mobile · 移动端适配插件：为 DeepSeek Harness Web 界面提供手机端布局、主题、缩放等增强，桌面端不受影响。'
+          sheet.appendChild(intro)
+          for (const it of ABOUT) {
+            const row = document.createElement('div'); row.className = 'dshMobAboutItem'
+            const n = document.createElement('div'); n.className = 'dshMobAboutName'; n.textContent = it.name
+            const d = document.createElement('div'); d.className = 'dshMobAboutDesc'; d.textContent = it.desc
+            row.appendChild(n); row.appendChild(d)
+            sheet.appendChild(row)
+          }
+          const close = document.createElement('button'); close.type = 'button'; close.className = 'dshMobThemeClose'; close.textContent = '完成'
+          close.addEventListener('click', closeAbout)
+          sheet.appendChild(close)
+          aboutMask.appendChild(sheet)
+          aboutMask.addEventListener('click', (e) => { if (e.target === aboutMask) closeAbout() })
+          document.body.appendChild(aboutMask)
+        }
+        aboutMask.setAttribute('data-open', 'true')
+      }
+      const closeAbout = () => { if (aboutMask) aboutMask.setAttribute('data-open', 'false') }
       let alive = true, mobile = false, mql = null
-      let menuMask = null, zoomMask = null, statsMask = null
+      let menuMask = null, zoomMask = null, statsMask = null, aboutMask = null
       let longTimer = 0, suppressClick = false, downX = 0, downY = 0
 
       const readScale = () => {
@@ -3704,6 +3758,11 @@ window.__ModuleLoader__.load({
           tile.addEventListener('click', (e) => { e.stopPropagation(); onMenuAct(it.id) })
           grid.appendChild(tile)
         }
+        // 关于 is pinned LAST, regardless of future apps added to MENU
+        const about = document.createElement('button'); about.type = 'button'; about.className = 'dshMobFuncApp'; about.setAttribute('data-act', 'about')
+        about.innerHTML = '<span class="dshMobFuncAppIcon">' + '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 10v6M12 7.5v.01"/></svg>' + '</span><span class="dshMobFuncAppName">关于</span>'
+        about.addEventListener('click', (e) => { e.stopPropagation(); onMenuAct('about') })
+        grid.appendChild(about)
         sheet.appendChild(grid)
         menuMask.appendChild(sheet)
         menuMask.addEventListener('click', (e) => { if (e.target === menuMask) closeMenu() })
@@ -3723,6 +3782,7 @@ window.__ModuleLoader__.load({
           refreshMenuItems()
           return
         }
+        if (id === 'about') { closeMenu(); openAbout() }
       }
 
       const buildZoom = () => {
@@ -3802,6 +3862,7 @@ window.__ModuleLoader__.load({
         if (menuMask && menuMask.isConnected) menuMask.remove(); menuMask = null
         if (zoomMask && zoomMask.isConnected) zoomMask.remove(); zoomMask = null
         if (statsMask && statsMask.isConnected) statsMask.remove(); statsMask = null
+        if (aboutMask && aboutMask.isConnected) aboutMask.remove(); aboutMask = null
         document.documentElement.style.removeProperty('--dsw-chat-font-scale')
         document.documentElement.removeAttribute('data-dsh-stats1')
         document.documentElement.removeAttribute('data-dsh-stats2')
