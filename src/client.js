@@ -1376,6 +1376,223 @@ window.__ModuleLoader__.load({
   html.${HTML_CLASS} .dshMobThemeDot { width: 34px !important; height: 34px !important; border-radius: 50% !important; cursor: pointer !important; border: 1px solid rgba(0,0,0,.14) !important; flex: none !important; }
   html.${HTML_CLASS} .dshMobThemeDot[data-active="true"] { outline: 2px solid var(--dsw-alias-label-primary, #0f1115) !important; outline-offset: 2px !important; }
   html.${HTML_CLASS} .dshMobThemeClose { margin-top: 14px !important; width: 100% !important; padding: 11px !important; border-radius: 12px !important; border: none !important; background: var(--dsw-alias-bg-module-platform, #f5f6f7) !important; color: var(--dsw-alias-label-primary, #0f1115) !important; font-size: 14px !important; font-weight: 600 !important; -webkit-tap-highlight-color: transparent !important; touch-action: manipulation !important; }
+
+  /* ===== R6 — zoom (font-scale reflow) + long-message fold (mobile only) ===== */
+  /* Zoom: --dsw-chat-font-scale drives EVERY chat text (AI + user body, tool-call /
+     context-injection badges, action labels, time/meta, icons) so it all REFLOWS
+     (not transform:scale — no blur). Every element gets a FIXED base px * var, so nested
+     text never compounds and everything stays uniform. */
+  html.${HTML_CLASS} [class*="_flowItem"] p,
+  html.${HTML_CLASS} [class*="_flowItem"] li,
+  html.${HTML_CLASS} [class*="_flowItem"] span,
+  html.${HTML_CLASS} [class*="_flowItem"] div,
+  html.${HTML_CLASS} [class*="_flowItem"] strong,
+  html.${HTML_CLASS} [class*="_flowItem"] em,
+  html.${HTML_CLASS} [class*="_flowItem"] a,
+  html.${HTML_CLASS} [class*="_flowItem"] td,
+  html.${HTML_CLASS} [class*="_flowItem"] blockquote,
+  html.${HTML_CLASS} [class*="_flowItem"] time,
+  html.${HTML_CLASS} [class*="_userRow"] p,
+  html.${HTML_CLASS} [class*="_userRow"] span,
+  html.${HTML_CLASS} [class*="_userRow"] div,
+  html.${HTML_CLASS} [class*="_userRow"] a {
+    font-size: calc(14px * var(--dsw-chat-font-scale, 1)) !important;
+    line-height: calc(1.7 * var(--dsw-chat-font-scale, 1)) !important;
+  }
+  html.${HTML_CLASS} [class*="_flowItem"] pre,
+  html.${HTML_CLASS} [class*="_flowItem"] code,
+  html.${HTML_CLASS} [class*="_userRow"] code {
+    font-size: calc(12.5px * var(--dsw-chat-font-scale, 1)) !important;
+    line-height: calc(1.5 * var(--dsw-chat-font-scale, 1)) !important;
+  }
+  /* Action labels (复制/好/坏/分支) + time/meta scale together, slimmer base. */
+  html.${HTML_CLASS} [class*="_flowItem"] [class*="_action"],
+  html.${HTML_CLASS} [class*="_flowItem"] [class*="_actions"] button,
+  html.${HTML_CLASS} [class*="_flowItem"] [class*="time"] {
+    font-size: calc(12px * var(--dsw-chat-font-scale, 1)) !important;
+    line-height: calc(1.4 * var(--dsw-chat-font-scale, 1)) !important;
+  }
+  /* Tool-call (Tool call …) + context-injection (上下文注入 …) rows also scale, wherever
+     they render under the chat scroll, so special message text is never left at 14px. */
+  html.${HTML_CLASS} [class*="_toolCall"],
+  html.${HTML_CLASS} [class*="_toolCallTitle"],
+  html.${HTML_CLASS} [class*="_toolRow"],
+  html.${HTML_CLASS} [class*="_toolTitle"],
+  html.${HTML_CLASS} [class*="_contextInj"],
+  html.${HTML_CLASS} [class*="_contextInject"],
+  html.${HTML_CLASS} [class*="_inject"],
+  html.${HTML_CLASS} [class*="_contextRow"],
+  html.${HTML_CLASS} [class*="_context"] {
+    font-size: calc(14px * var(--dsw-chat-font-scale, 1)) !important;
+    line-height: calc(1.5 * var(--dsw-chat-font-scale, 1)) !important;
+  }
+  /* Tool-call / context-injection block INTERNAL text (name/summary/params) + icons
+     scale too — not just the container — so nothing is stuck at the 16px base. */
+  html.${HTML_CLASS} [class*="_toolCall"] :is(p, span, div, strong, em, a, code, pre, time),
+  html.${HTML_CLASS} [class*="_toolRow"] :is(p, span, div, strong, em, a, code, pre, time),
+  html.${HTML_CLASS} [class*="_toolTitle"] :is(p, span, div, strong, em, a, code, pre, time),
+  html.${HTML_CLASS} [class*="_contextInj"] :is(p, span, div, strong, em, a, code, pre, time),
+  html.${HTML_CLASS} [class*="_contextInject"] :is(p, span, div, strong, em, a, code, pre, time),
+  html.${HTML_CLASS} [class*="_inject"] :is(p, span, div, strong, em, a, code, pre, time),
+  html.${HTML_CLASS} [class*="_contextRow"] :is(p, span, div, strong, em, a, code, pre, time),
+  html.${HTML_CLASS} [class*="_context"] :is(p, span, div, strong, em, a, code, pre, time) {
+    font-size: calc(14px * var(--dsw-chat-font-scale, 1)) !important;
+    line-height: calc(1.5 * var(--dsw-chat-font-scale, 1)) !important;
+  }
+  html.${HTML_CLASS} [class*="_tool"] svg,
+  html.${HTML_CLASS} [class*="_context"] svg,
+  html.${HTML_CLASS} [class*="_inject"] svg,
+  html.${HTML_CLASS} [class*="inject"] svg {
+    width: calc(16px * var(--dsw-chat-font-scale, 1)) !important;
+    height: calc(16px * var(--dsw-chat-font-scale, 1)) !important;
+  }
+  /* Inline icons (SVG in buttons / meta) scale so the whole UI grows together. */
+  html.${HTML_CLASS} [class*="_flowItem"] svg,
+  html.${HTML_CLASS} [class*="_userRow"] svg {
+    width: calc(16px * var(--dsw-chat-font-scale, 1)) !important;
+    height: calc(16px * var(--dsw-chat-font-scale, 1)) !important;
+  }
+  /* Message-level spacing reflows with the text. */
+  html.${HTML_CLASS} [class*="_flowItem"] {
+    row-gap: calc(8px * var(--dsw-chat-font-scale, 1)) !important;
+    column-gap: calc(8px * var(--dsw-chat-font-scale, 1)) !important;
+  }
+  /* Paragraph/list margins + action-row gap/icon padding scale with the text so spacing
+     stays proportionate at every zoom level (aesthetic: no cramped gaps at small text). */
+  html.${HTML_CLASS} [class*="_flowItem"] p,
+  html.${HTML_CLASS} [class*="_flowItem"] li,
+  html.${HTML_CLASS} [class*="_userRow"] p {
+    margin: calc(4px * var(--dsw-chat-font-scale, 1)) 0 !important;
+  }
+  html.${HTML_CLASS} [class*="_flowItem"] [class*="_actions"] {
+    gap: calc(4px * var(--dsw-chat-font-scale, 1)) calc(8px * var(--dsw-chat-font-scale, 1)) !important;
+  }
+  html.${HTML_CLASS} [class*="_flowItem"] [class*="_action"] {
+    padding: calc(6px * var(--dsw-chat-font-scale, 1)) !important;
+  }
+
+  /* Fold button — same 28px pill / radius / color / hover as the native message action
+     buttons, placed inline at the far right of the action row. */
+  html.${HTML_CLASS} .dshMobFoldBtn {
+    appearance: none !important;
+    border: none !important;
+    background: transparent !important;
+    color: var(--dsw-alias-label-tertiary, #81858c) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 28px !important;
+    height: 28px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 28px !important;
+    cursor: pointer !important;
+    -webkit-tap-highlight-color: transparent !important;
+    touch-action: manipulation !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    flex: none !important;
+  }
+  html.${HTML_CLASS} .dshMobFoldBtn svg { display: block !important; width: 16px !important; height: 16px !important; }
+  html.${HTML_CLASS} .dshMobFoldBtn:active { background: var(--dsw-alias-interactive-bg-hover, rgba(0,0,0,.05)) !important; }
+  /* Folded text reuses the message body font-size / line-height (calc from the same
+     scale var), so a folded message matches the original, and AI == user. */
+  html.${HTML_CLASS} .dshMobFoldText {
+    font-size: calc(14px * var(--dsw-chat-font-scale, 1)) !important;
+    line-height: calc(1.7 * var(--dsw-chat-font-scale, 1)) !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+  }
+  html.${HTML_CLASS} .dshMobFoldBar {
+    appearance: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 34px !important;
+    height: 22px !important;
+    margin: 0 4px !important;
+    padding: 0 8px !important;
+    border-radius: 999px !important;
+    border: none !important;
+    background: var(--dsw-alias-bg-overlay, #e9ecf2) !important;
+    color: var(--dsw-alias-label-secondary, #61666b) !important;
+    font-size: calc(14px * var(--dsw-chat-font-scale, 1)) !important;
+    line-height: 1 !important;
+    vertical-align: middle !important;
+    cursor: pointer !important;
+    -webkit-tap-highlight-color: transparent !important;
+    touch-action: manipulation !important;
+  }
+  /* Folded message body: clamp to a block so the bar row sits inline with the text. */
+  html.${HTML_CLASS} [data-dsh-folded="true"] .dshMobFoldText {
+    display: inline !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  /* Zoom bottom-sheet (reuses the theme sheet look; z above the lifted sidebar). */
+  html.${HTML_CLASS} .dshMobZoomMask {
+    position: fixed !important; inset: 0 !important; z-index: 1300 !important;
+    background: var(--dsw-alias-bg-mask-1, rgba(15,17,21,.5)) !important;
+    display: none !important; align-items: flex-end !important; justify-content: center !important;
+    padding: 12px !important; box-sizing: border-box !important;
+  }
+  html.${HTML_CLASS} .dshMobZoomMask[data-open="true"] { display: flex !important; }
+  html.${HTML_CLASS} .dshMobZoomSheet {
+    width: 100% !important; max-width: 400px !important;
+    background: var(--dsw-alias-bg-layer-2, var(--dsw-alias-bg-base, #fff)) !important;
+    border-radius: 18px !important;
+    padding: 18px 16px calc(18px + env(safe-area-inset-bottom, 0px)) !important;
+    box-shadow: var(--dsw-shadow-lv3, 0 12px 40px rgba(0,0,0,.2)) !important;
+  }
+  html.${HTML_CLASS} .dshMobZoomSheet h4 { margin: 0 0 4px !important; font-size: 15px !important; color: var(--dsw-alias-label-primary, #0f1115) !important; }
+  html.${HTML_CLASS} .dshMobZoomCur { font-size: 26px !important; font-weight: 700 !important; color: var(--dsw-alias-label-primary, #0f1115) !important; text-align: center !important; margin: 6px 0 !important; }
+  html.${HTML_CLASS} .dshMobZoomRow { display: flex !important; align-items: center !important; gap: 10px !important; }
+  html.${HTML_CLASS} .dshMobZoomBtn {
+    appearance: none !important; border: 1px solid var(--dsw-alias-border-l2, rgba(0,0,0,.12)) !important;
+    background: var(--dsw-alias-bg-layer-1, #fff) !important; color: var(--dsw-alias-label-primary, #0f1115) !important;
+    width: 44px !important; height: 44px !important; border-radius: 12px !important; font-size: 20px !important; font-weight: 700 !important;
+    cursor: pointer !important; -webkit-tap-highlight-color: transparent !important; touch-action: manipulation !important; flex: none !important;
+  }
+  html.${HTML_CLASS} .dshMobZoomRange { flex: 1 1 auto !important; min-width: 0 !important; accent-color: var(--dsw-alias-state-business-primary, #4176e6) !important; }
+  html.${HTML_CLASS} .dshMobZoomReset {
+    width: 100% !important; margin-top: 12px !important; padding: 10px !important; border-radius: 12px !important;
+    border: none !important; background: var(--dsw-alias-bg-module-platform, #f5f6f7) !important;
+    color: var(--dsw-alias-label-primary, #0f1115) !important; font-size: 14px !important; font-weight: 600 !important;
+    -webkit-tap-highlight-color: transparent !important; touch-action: manipulation !important;
+  }
+
+  /* Whale-FAB long-press → primary function MENU (array-driven, extensible). */
+  html.${HTML_CLASS} .dshMobFuncMask {
+    position: fixed !important; inset: 0 !important; z-index: 1350 !important;
+    background: var(--dsw-alias-bg-mask-1, rgba(15,17,21,.5)) !important;
+    display: none !important; align-items: flex-end !important; justify-content: center !important;
+    padding: 12px !important; box-sizing: border-box !important;
+  }
+  html.${HTML_CLASS} .dshMobFuncMask[data-open="true"] { display: flex !important; }
+  html.${HTML_CLASS} .dshMobFuncSheet {
+    width: 100% !important; max-width: 400px !important;
+    background: var(--dsw-alias-bg-layer-2, var(--dsw-alias-bg-base, #fff)) !important;
+    border-radius: 18px !important;
+    padding: 14px 12px calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+    box-shadow: var(--dsw-shadow-lv3, 0 12px 40px rgba(0,0,0,.2)) !important;
+  }
+  html.${HTML_CLASS} .dshMobFuncTitle { margin: 2px 4px 8px !important; font-size: 14px !important; font-weight: 700 !important; color: var(--dsw-alias-label-primary, #0f1115) !important; }
+  html.${HTML_CLASS} .dshMobFuncList { display: flex !important; flex-direction: column !important; gap: 8px !important; }
+  html.${HTML_CLASS} .dshMobFuncItem {
+    display: flex !important; align-items: center !important; gap: 12px !important;
+    width: 100% !important; padding: 12px !important; text-align: left !important;
+    border: 1px solid var(--dsw-alias-border-l2, rgba(0,0,0,.12)) !important; border-radius: 14px !important;
+    background: var(--dsw-alias-bg-layer-1, #fff) !important; color: var(--dsw-alias-label-primary, #0f1115) !important;
+    cursor: pointer !important; -webkit-tap-highlight-color: transparent !important; touch-action: manipulation !important; user-select: none !important; -webkit-user-select: none !important;
+  }
+  html.${HTML_CLASS} .dshMobFuncItem:active { background: var(--dsw-alias-interactive-bg-hover, rgba(0,0,0,.05)) !important; }
+  html.${HTML_CLASS} .dshMobFuncIcon { display: inline-flex !important; align-items: center !important; justify-content: center !important; width: 36px !important; height: 36px !important; border-radius: 10px !important; background: color-mix(in srgb, var(--dsw-alias-state-business-primary, #4176e6) 12%, var(--dsw-alias-bg-base, #fff)) !important; color: var(--dsw-alias-state-business-primary, #4176e6) !important; flex: none !important; }
+  html.${HTML_CLASS} .dshMobFuncTxt { display: flex !important; flex-direction: column !important; gap: 2px !important; min-width: 0 !important; }
+  html.${HTML_CLASS} .dshMobFuncLabel { font-size: 14px !important; font-weight: 600 !important; color: var(--dsw-alias-label-primary, #0f1115) !important; }
+  html.${HTML_CLASS} .dshMobFuncDesc { font-size: 11.5px !important; color: var(--dsw-alias-label-tertiary, #81858c) !important; }
 }
 
 .dshMobMenu {
@@ -1397,6 +1614,7 @@ window.__ModuleLoader__.load({
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   touch-action: none;
+  -webkit-touch-callout: none;
   user-select: none;
 }
 .dshMobMenu:active {
@@ -1406,6 +1624,7 @@ window.__ModuleLoader__.load({
   width: 22px;
   height: auto;
   display: block;
+  pointer-events: none; /* long-press lands on the button, not the icon (no image-save menu) */
 }
 .dshMobMenu[data-flash="true"] {
   border-color: var(--dsw-alias-label-primary, #0f1115);
@@ -3213,6 +3432,363 @@ window.__ModuleLoader__.load({
       }
     }
 
+    // R6 — whale-FAB long-press -> multi-level function card menu. The PRIMARY menu is
+    // an array-driven, extensible card list; zoom is a SECONDARY item (tap it opens the
+    // zoom submenu, which sets --dsw-chat-font-scale so the chat content REFLOWS).
+    // Follows docs/ref/floating-longpress.html (touch-action:none + icon pointer-events:none
+    // + contextmenu/dragstart preventDefault → no system menu on long-press). We keep the
+    // tap→sidebar click intact, so we do NOT preventDefault touchstart. Mobile only.
+    function installZoom() {
+      if (typeof document === 'undefined') return undefined
+      const STORE = 'dsh-mobile-zoom-v1'
+      const EXPIRE = 3 * 24 * 3600 * 1000
+      const MIN = 0.7, MAX = 1.5, STEP = 0.05
+      const MENU = [
+        { id: 'zoom', label: '字号缩放', desc: '放大 / 缩小聊天文字', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16M12 4v16"/></svg>' },
+        // future functions go here (array-driven, extensible)
+      ]
+      let alive = true, mobile = false, mql = null
+      let menuMask = null, zoomMask = null
+      let longTimer = 0, suppressClick = false, downX = 0, downY = 0
+
+      const readScale = () => {
+        try { const s = JSON.parse(localStorage.getItem(STORE) || 'null'); if (s && s.scale > 0 && Date.now() - s.ts < EXPIRE) return s.scale } catch (_) {}
+        return 1
+      }
+      const writeScale = (v) => { try { localStorage.setItem(STORE, JSON.stringify({ scale: v, ts: Date.now() })) } catch (_) {} }
+      const clamp = (v) => Math.max(MIN, Math.min(MAX, v))
+      const applyScale = (v) => {
+        const c = clamp(v)
+        document.documentElement.style.setProperty('--dsw-chat-font-scale', String(c))
+        writeScale(c)
+        if (zoomMask) {
+          const cur = zoomMask.querySelector('.dshMobZoomCur'); if (cur) cur.textContent = Math.round(c * 100) + '%'
+          const r = zoomMask.querySelector('.dshMobZoomRange'); if (r) r.value = String(c)
+        }
+      }
+      const closeMenu = () => { if (menuMask) menuMask.setAttribute('data-open', 'false') }
+      const closeZoom = () => { if (zoomMask) zoomMask.setAttribute('data-open', 'false') }
+
+      const buildMenu = () => {
+        menuMask = document.createElement('div'); menuMask.className = 'dshMobFuncMask'
+        const sheet = document.createElement('div'); sheet.className = 'dshMobFuncSheet'
+        const title = document.createElement('div'); title.className = 'dshMobFuncTitle'; title.textContent = '功能'
+        sheet.appendChild(title)
+        const list = document.createElement('div'); list.className = 'dshMobFuncList'
+        for (const it of MENU) {
+          const card = document.createElement('button'); card.type = 'button'; card.className = 'dshMobFuncItem'; card.setAttribute('data-act', it.id)
+          card.innerHTML = '<span class="dshMobFuncIcon">' + it.icon + '</span><span class="dshMobFuncTxt"><span class="dshMobFuncLabel">' + it.label + '</span><span class="dshMobFuncDesc">' + it.desc + '</span></span>'
+          card.addEventListener('click', (e) => { e.stopPropagation(); onMenuAct(it.id) })
+          list.appendChild(card)
+        }
+        sheet.appendChild(list)
+        menuMask.appendChild(sheet)
+        menuMask.addEventListener('click', (e) => { if (e.target === menuMask) closeMenu() })
+        document.body.appendChild(menuMask)
+      }
+      const openMenu = () => { if (!menuMask) buildMenu(); menuMask.setAttribute('data-open', 'true') }
+      const onMenuAct = (id) => { if (id === 'zoom') { closeMenu(); openZoom() } }
+
+      const buildZoom = () => {
+        zoomMask = document.createElement('div'); zoomMask.className = 'dshMobZoomMask'
+        const sheet = document.createElement('div'); sheet.className = 'dshMobZoomSheet'
+        const h = document.createElement('h4'); h.textContent = '字号缩放'
+        const cur = document.createElement('div'); cur.className = 'dshMobZoomCur'; cur.textContent = '100%'
+        const row = document.createElement('div'); row.className = 'dshMobZoomRow'
+        const minus = document.createElement('button'); minus.className = 'dshMobZoomBtn'; minus.type = 'button'; minus.textContent = '−'
+        const range = document.createElement('input'); range.type = 'range'; range.className = 'dshMobZoomRange'; range.min = String(MIN); range.max = String(MAX); range.step = String(STEP); range.value = '1'
+        const plus = document.createElement('button'); plus.className = 'dshMobZoomBtn'; plus.type = 'button'; plus.textContent = '+'
+        const set = (v) => applyScale(parseFloat(v))
+        minus.addEventListener('click', () => set((parseFloat(range.value) - STEP).toFixed(2)))
+        plus.addEventListener('click', () => set((parseFloat(range.value) + STEP).toFixed(2)))
+        range.addEventListener('input', () => set(range.value))
+        row.appendChild(minus); row.appendChild(range); row.appendChild(plus)
+        const reset = document.createElement('button'); reset.className = 'dshMobZoomReset'; reset.type = 'button'; reset.textContent = '复位'
+        reset.addEventListener('click', () => set(1))
+        sheet.appendChild(h); sheet.appendChild(cur); sheet.appendChild(row); sheet.appendChild(reset)
+        zoomMask.appendChild(sheet)
+        zoomMask.addEventListener('click', (e) => { if (e.target === zoomMask) closeZoom() })
+        document.body.appendChild(zoomMask)
+      }
+      const openZoom = () => { if (!zoomMask) buildZoom(); zoomMask.setAttribute('data-open', 'true'); applyScale(readScale()) }
+
+      const onDown = (e) => {
+        if (!e.target || !e.target.closest || !e.target.closest('.dshMobMenu')) return
+        suppressClick = false
+        downX = e.clientX; downY = e.clientY
+        if (longTimer) clearTimeout(longTimer)
+        longTimer = setTimeout(() => { longTimer = 0; suppressClick = true; openMenu() }, 500)
+      }
+      const onMove = (e) => {
+        if (longTimer && e.target && e.target.closest && e.target.closest('.dshMobMenu') && Math.hypot(e.clientX - downX, e.clientY - downY) > 10) { clearTimeout(longTimer); longTimer = 0 }
+      }
+      const onUp = () => { if (longTimer) { clearTimeout(longTimer); longTimer = 0 } }
+      const onClick = (e) => {
+        if (suppressClick) {
+          if (e.target && e.target.closest && e.target.closest('.dshMobMenu')) { e.preventDefault(); e.stopPropagation() }
+          suppressClick = false
+        }
+      }
+      const onCancel = () => { if (longTimer) { clearTimeout(longTimer); longTimer = 0 } }
+      const onCtx = (e) => { if (e.target && e.target.closest && e.target.closest('.dshMobMenu')) e.preventDefault() }
+      const onDrag = (e) => { if (e.target && e.target.closest && e.target.closest('.dshMobMenu')) e.preventDefault() }
+
+      const setup = () => {
+        applyScale(readScale())
+        document.addEventListener('pointerdown', onDown, true)
+        document.addEventListener('pointermove', onMove, true)
+        document.addEventListener('pointerup', onUp, true)
+        document.addEventListener('pointercancel', onCancel, true)
+        document.addEventListener('click', onClick, true)
+        document.addEventListener('contextmenu', onCtx, true)
+        document.addEventListener('dragstart', onDrag, true)
+      }
+      const teardown = () => {
+        if (longTimer) clearTimeout(longTimer); longTimer = 0
+        document.removeEventListener('pointerdown', onDown, true)
+        document.removeEventListener('pointermove', onMove, true)
+        document.removeEventListener('pointerup', onUp, true)
+        document.removeEventListener('pointercancel', onCancel, true)
+        document.removeEventListener('click', onClick, true)
+        document.removeEventListener('contextmenu', onCtx, true)
+        document.removeEventListener('dragstart', onDrag, true)
+        if (menuMask && menuMask.isConnected) menuMask.remove(); menuMask = null
+        if (zoomMask && zoomMask.isConnected) zoomMask.remove(); zoomMask = null
+        document.documentElement.style.removeProperty('--dsw-chat-font-scale')
+      }
+      const onMq = () => { const n = mobileDomAllowed(); if (n === mobile) return; mobile = n; if (mobile) setup(); else teardown() }
+      try { if (window.matchMedia) { mql = window.matchMedia(MOBILE_MQ); if (mql.addEventListener) mql.addEventListener('change', onMq); else if (mql.addListener) mql.addListener(onMq) } } catch (_) {}
+      mobile = mobileDomAllowed(); if (mobile) setup()
+      return () => { alive = false; teardown(); try { if (mql) { if (mql.removeEventListener) mql.removeEventListener('change', onMq); else if (mql.removeListener) mql.removeListener(onMq) } } catch (_) {} }
+    }
+
+    // R6 — long-message fold. Appends a 【折叠】 button to each chat message action
+    // row; clicking collapses a >40-char message to "first20 + bar + last20", clicking
+    // the bar expands. Fold state persisted (localStorage, 3-day expiry). Mobile only;
+    // display-only; class-agnostic; idempotent observer (never self-triggers).
+    function installMessageFold() {
+      if (typeof document === 'undefined' || !window.MutationObserver) return undefined
+      const STORE = 'dsh-mobile-fold-v1'
+      const EXPIRE = 3 * 24 * 3600 * 1000
+      const MIN_LEN = 40, HEAD = 20, TAIL = 20
+      let alive = true, mobile = false, mql = null, raf = 0
+      const hash = (s) => { let h = 0; for (let i = 0; i < s.length; i++) { h = ((h << 5) - h + s.charCodeAt(i)) | 0 } return (h >>> 0).toString(36) }
+      const readAll = () => { try { const r = JSON.parse(localStorage.getItem(STORE) || '{}'); return (r && typeof r === 'object') ? r : {} } catch (_) { return {} } }
+      const writeAll = (o) => { try { localStorage.setItem(STORE, JSON.stringify(o)) } catch (_) {} }
+      const prune = () => { const o = readAll(); const now = Date.now(); let c = false; for (const k in o) if (now - (o[k].ts || 0) > EXPIRE) { delete o[k]; c = true } if (c) writeAll(o); return o }
+      const keyFor = (flow) => { const t = (flow.textContent || ''); return String(t.length) + '-' + hash(t.slice(0, 40)) }
+      // Pair each chat action row with its message BODY. In DSH the long message
+      // text and its actions/meta live in two SIBLING flowItems: the actions row's
+      // flowItem carries the short meta, and its PREVIOUS SIBLING flowItem is the
+      // body. (For user messages, fall back to the largest leaf text in the same
+      // container.) The body must have >MIN_LEN text and no nested actions row.
+      // Skip a body that still carries a think/reasoning block or an already-collapsed
+      // node — those are already folded by DSH and must NOT be re-folded / touched.
+      // Skip a body that already carries a self-collapsing / foldable block — Think /
+      // reasoning, tool-call (Tool call …), or any block with its own collapse. Those are
+      // foldable by DSH already; the plugin must NOT re-fold them with "first20+bar+last20".
+      const hasSelfFold = (el) => {
+        if (!el) return false
+        return !!el.querySelector(
+          '[class*="_think"], summary, details, ' +
+          '[class*="_toolCall"], [class*="_tool"], [class*="_toolRow"], [class*="_toolTitle"], ' +
+          '[class*="collapse"], [class*="Collapse"], [class*="_fold"], [class*="_collapsible"]',
+        )
+      }
+      const pairFor = (actionsRow) => {
+        let item = actionsRow
+        for (let n = actionsRow; n && n !== document.body; n = n.parentElement) {
+          if ((n.className || '').toString().indexOf('_flowItem') !== -1) { item = n; break }
+        }
+        // USER messages: the actions + message text live in the SAME flowItem → the
+        // flowItem itself is the body (fold only its text leaves, never the actions).
+        // (Note: an AI meta/actions flowItem can ALSO hold a ≥MIN_LEN leaf, e.g. the
+        // "Tool call …" meta label — so self-body pairing must be restricted to user
+        // messages, otherwise AI messages pair with their own meta row and never fold.)
+        const isUserItem = !!item.querySelector('[class*="_userRow"], [class*="userStack"], [class*="UserMessage"]')
+        if (isUserItem) {
+          const selfHasLongLeaf = Array.from(item.querySelectorAll('*')).some(el =>
+            el.children.length === 0 &&
+            (el.textContent || '').trim().length >= MIN_LEN &&
+            !el.closest('[class*="_actions"]') &&
+            !el.closest('[data-variant="think"], [data-variant="tool"], [data-variant="toolCall"]'),
+          )
+          if (selfHasLongLeaf) return { item, body: item }
+        }
+        const prev = item.previousElementSibling
+        const prevText = prev ? (prev.textContent || '').trim() : ''
+        if (prev && (prev.className || '').toString().indexOf('_flowItem') !== -1 && prevText.length > MIN_LEN) {
+          // AI messages: body is the previous sibling flowItem (long text)
+          return { item, body: prev }
+        }
+        // user message: walk up to the message row that holds a long leaf text (not the
+        // actions container), and use that whole container as the body so EVERY text block
+        // inside it (≥MIN_LEN) can be folded independently.
+        let anode = actionsRow.parentElement
+        for (let k = 0; k < 4 && anode; k++) {
+          const hasBlock = Array.from(anode.querySelectorAll('*')).some(el =>
+            el.children.length === 0 && (el.textContent || '').trim().length >= MIN_LEN && !el.closest('[class*="_actions"]'),
+          )
+          if (hasBlock) return { item, body: anode }
+          anode = anode.parentElement
+        }
+        return null
+      }
+      // Find the pure-text blocks in a message body: leaf text segments (p/li/pre/code +
+      // fallback leaf span/div) that are >=MIN_LEN chars and NOT inside a self-foldable
+      // block (think / toolcall / collapse). Each such block folds independently.
+      const EXCL = '[class*="_think"], [data-variant="think"], [data-variant="reasoning"], [class*="_toolCall"], [class*="_tool"], [class*="_toolRow"], [class*="_toolTitle"], [data-variant="tool"], [data-variant="toolCall"], [class*="collapse"], [class*="_fold"], summary, details'
+      // A leaf that belongs to a Think / reasoning / tool-call summary (already
+      // folded by DSH) must never be re-folded. Detect by class OR by leading text.
+      const isLeafSelfFold = (el) => {
+        if (el.closest(EXCL)) return true
+        const t = (el.textContent || '').trim()
+        return /^(think\b|tool\b|tool\s*call\b|reasoning\b|thought\b)/i.test(t)
+      }
+      const findTextBlocks = (body) => {
+        const cands = []
+        for (const el of body.querySelectorAll('*')) {
+          if (el.closest('[class*="_actions"]')) continue
+          if (isLeafSelfFold(el)) continue
+          if (el.children.length) continue
+          if ((el.textContent || '').trim().length >= MIN_LEN) cands.push(el)
+        }
+        // keep only the OUTERMOST leaf text blocks (a leaf inside another candidate is the
+        // same segment), so a message body with several paragraphs yields one block each.
+        return cands.filter(el => !cands.some(a => a !== el && a.contains(el)))
+      }
+      // Fold the message's TEXT LEAVES only — think / tool / context blocks and the
+      // actions row stay untouched, so collapsing hides the text but never the think.
+      const textLeaves = (body) => {
+        const cands = []
+        for (const el of body.querySelectorAll('*')) {
+          if (el.closest('[class*="_actions"]')) continue
+          if (el.closest('[data-variant="think"], [data-variant="tool"], [data-variant="toolCall"], [data-variant="reasoning"], summary, details')) continue
+          if (el.children.length) continue
+          if ((el.textContent || '').trim().length >= MIN_LEN) cands.push(el)
+        }
+        return cands.filter(el => !cands.some(a => a !== el && a.contains(el)))
+      }
+      const foldLeaf = (leaf, key) => {
+        const t = (leaf.textContent || '').trim()
+        if (t.length <= MIN_LEN) return
+        const o = prune(); o[key] = { fold: true, ts: Date.now() }; writeAll(o)
+        if (leaf._dshOrig == null) leaf._dshOrig = leaf.innerHTML
+        const tcs = getComputedStyle(leaf); const fs = tcs.fontSize, lh = tcs.lineHeight
+        const mk = (txt) => { const s = document.createElement('span'); s.className = 'dshMobFoldText'; s.textContent = txt; s.style.fontSize = fs; s.style.lineHeight = lh; return s }
+        const bar = document.createElement('button'); bar.className = 'dshMobFoldBar'; bar.type = 'button'; bar.textContent = '⋯'; bar.setAttribute('aria-label', '展开'); bar.style.fontSize = fs; bar.style.lineHeight = lh
+        leaf.textContent = ''
+        leaf.appendChild(mk(t.slice(0, HEAD))); leaf.appendChild(bar); leaf.appendChild(mk(t.slice(-TAIL)))
+        leaf.setAttribute('data-dsh-folded', 'true')
+        bar.addEventListener('click', (e) => { e.stopPropagation(); const o2 = prune(); delete o2[key]; writeAll(o2); expandLeaf(leaf) })
+      }
+      const expandLeaf = (leaf) => {
+        if (leaf._dshOrig != null) leaf.innerHTML = leaf._dshOrig
+        leaf.removeAttribute?.('data-dsh-folded')
+      }
+      const foldBody = (body) => { for (const l of textLeaves(body)) foldLeaf(l, blockKey(l)) }
+      const expandBody = (body) => { for (const l of body.querySelectorAll('[data-dsh-folded="true"]')) expandLeaf(l) }
+      const roleOf = (actionsRow) => (actionsRow.closest('[class*="_userRow"]') ? 'user' : 'ai')
+      const blockKey = (b) => keyFor(b)
+      const groupKey = (msgs) => { let s = ''; for (const m of msgs) s += (m.body.textContent || '').slice(0, 30); return 'g' + String(s.length) + '-' + hash(s) }
+      const isGroupFolded = (g) => g.msgs.some((m) => !!m.body.querySelector('[data-dsh-folded="true"]'))
+      const foldGroup = (g) => {
+        const o = prune()
+        for (const m of g.msgs) foldBody(m.body)
+        o[groupKey(g.msgs)] = { fold: true, ts: Date.now() }; writeAll(o)
+      }
+      const expandGroup = (g) => {
+        const o = prune()
+        for (const m of g.msgs) if (m.body.querySelector('[data-dsh-folded="true"]')) expandBody(m.body)
+        delete o[groupKey(g.msgs)]; writeAll(o)
+      }
+      const toggleGroup = (g) => { if (isGroupFolded(g)) expandGroup(g); else foldGroup(g) }
+      // Rebuild the groups FRESH at click time (React re-renders; bodies captured at
+      // load can be stale) and toggle the group that owns this button. Defensive: match
+      // ANY message row in the group (not only the last), and fall back to the button's
+      // own message if no group matched, so a click never silently does nothing.
+      const toggleFromBtn = (btn) => {
+        try {
+          const msgs = []
+          for (const actionsRow of document.querySelectorAll('[class*="_actions"]')) {
+            if (actionsRow.closest('[aria-modal="true"]')) continue
+            const p = pairFor(actionsRow)
+            if (!p) continue
+            msgs.push({ actionsRow, body: p.body, role: roleOf(actionsRow) })
+          }
+          const groups = []
+          for (const m of msgs) {
+            const last = groups[groups.length - 1]
+            if (last && last.role === m.role) last.msgs.push(m)
+            else groups.push({ role: m.role, msgs: [m] })
+          }
+          for (const g of groups) {
+            if (g.msgs.some(mm => mm.actionsRow.contains(btn))) { toggleGroup(g); return }
+          }
+          // fallback: toggle the single message that owns the button
+          const row = btn.closest('[class*="_actions"]')
+          const p = row ? pairFor(row) : null
+          if (p) { const g = { role: roleOf(row), msgs: [{ actionsRow: row, body: p.body, role: roleOf(row) }] }; toggleGroup(g) }
+        } catch (_) { /* never leave a dead click */ }
+      }
+      const processMessage = () => {
+        const msgs = []
+        for (const actionsRow of document.querySelectorAll('[class*="_actions"]')) {
+          if (actionsRow.closest('[aria-modal="true"]')) continue
+          const p = pairFor(actionsRow)
+          if (!p) continue
+          msgs.push({ actionsRow, body: p.body, role: roleOf(actionsRow) })
+        }
+        // group consecutive same-role messages; one fold button per group
+        const groups = []
+        for (const m of msgs) {
+          const last = groups[groups.length - 1]
+          if (last && last.role === m.role) last.msgs.push(m)
+          else groups.push({ role: m.role, msgs: [m] })
+        }
+        const o = prune()
+        for (const g of groups) {
+          const last = g.msgs[g.msgs.length - 1]
+          const row = last.actionsRow
+          if (!row.querySelector('.dshMobGroupFold')) {
+            const b = document.createElement('button'); b.className = 'dshMobFoldBtn dshMobGroupFold'; b.type = 'button'
+            b.setAttribute('aria-label', '折叠')
+            // nicer two-line "collapse" icon, same linear style/size as the four buttons
+            b.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9h14M5 15h14"/></svg>'
+            b.addEventListener('click', (e) => { e.stopPropagation(); toggleFromBtn(b) })
+            const actBtns = row.querySelectorAll('[class*="_action"]')
+            const lastB = actBtns[actBtns.length - 1]
+            if (lastB) lastB.after(b); else row.appendChild(b)
+          }
+          if (o[groupKey(g.msgs)] && o[groupKey(g.msgs)].fold && !isGroupFolded(g)) foldGroup(g)
+        }
+      }
+      const applyFold = () => {
+        raf = 0
+        if (!alive || !mobileDomAllowed()) return
+        processMessage()
+      }
+      const schedule = () => { if (!alive || !mobile) return; if (raf) return; raf = requestAnimationFrame(applyFold) }
+      let bodyObs = null
+      const setup = () => { applyFold(); if (!bodyObs) { bodyObs = new MutationObserver(schedule); bodyObs.observe(document.body, { childList: true, subtree: true }) } }
+      const teardown = () => {
+        if (raf) cancelAnimationFrame(raf); raf = 0
+        if (bodyObs) { bodyObs.disconnect(); bodyObs = null }
+        // Remove the injected fold UI so a mobile→desktop resize leaves no residue
+        // (a fresh desktop load already has 0 = native).
+        for (const btn of document.querySelectorAll('.dshMobFoldBtn')) btn.remove()
+        for (const el of document.querySelectorAll('[data-dsh-folded]')) {
+          if (el._dshOrig != null) el.innerHTML = el._dshOrig
+          el.removeAttribute('data-dsh-folded')
+        }
+        for (const stale of document.querySelectorAll('.dshMobFoldBar, .dshMobFoldText')) stale.remove()
+      }
+      const onMq = () => { const n = mobileDomAllowed(); if (n === mobile) return; mobile = n; if (mobile) setup(); else teardown() }
+      try { if (window.matchMedia) { mql = window.matchMedia(MOBILE_MQ); if (mql.addEventListener) mql.addEventListener('change', onMq); else if (mql.addListener) mql.addListener(onMq) } } catch (_) {}
+      mobile = mobileDomAllowed(); if (mobile) setup()
+      return () => { alive = false; teardown(); try { if (mql) { if (mql.removeEventListener) mql.removeEventListener('change', onMq); else if (mql.removeListener) mql.removeListener(onMq) } } catch (_) {} }
+    }
+
     function apply(ctx) {
       ensureStyle()
       ctx.effect(
@@ -3227,6 +3803,8 @@ window.__ModuleLoader__.load({
       )
       ctx.effect(installModelEditorTooltip, 'dsh-webui-mobile: model-editor-tooltip')
       ctx.effect(installThemeCustom, 'dsh-webui-mobile: theme-custom')
+      ctx.effect(installZoom, 'dsh-webui-mobile: zoom')
+      ctx.effect(installMessageFold, 'dsh-webui-mobile: message-fold')
       ctx.effect(installSettingsHeaderReparent, 'dsh-webui-mobile: settings-header-reparent')
       ctx.effect(installSettingsConfigRow, 'dsh-webui-mobile: settings-config-row')
       ctx.effect(installPopupZGuard, 'dsh-webui-mobile: popup-z-guard')
