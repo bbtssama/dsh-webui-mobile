@@ -3601,7 +3601,8 @@ window.__ModuleLoader__.load({
           sw.addEventListener('click', (e) => {
             e.stopPropagation()
             const r = readStats()
-            r[key] = !(r[key] === false)
+            // undefined (=shown default) → OFF; false → ON; true → OFF
+            r[key] = !(r[key] !== false)
             writeStats(r)
             applyStatsState(r)
             applyStats()
