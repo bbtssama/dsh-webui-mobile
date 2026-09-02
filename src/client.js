@@ -3715,7 +3715,9 @@ window.__ModuleLoader__.load({
         if (id === 'stats') { closeMenu(); openStats(); return }
         if (id === 'crumb' || id === 'uploadimg') {
           const t = readTools()
-          t[id === 'crumb' ? 'breadcrumb' : 'uploadimg'] = !(t[id === 'crumb' ? 'breadcrumb' : 'uploadimg'] === false)
+          const key = id === 'crumb' ? 'breadcrumb' : 'uploadimg'
+          // undefined (=on default) → OFF; false → ON; true → OFF
+          t[key] = !(t[key] !== false)
           writeTools(t)
           applyToolsState()
           refreshMenuItems()
