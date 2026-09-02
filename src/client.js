@@ -1576,6 +1576,9 @@ window.__ModuleLoader__.load({
      them frees the bottom space so the input area moves down (no blank bar). */
   html.${HTML_CLASS}[data-dsh-stats1="0"] [data-dsh-line="1"] { display: none !important; }
   html.${HTML_CLASS}[data-dsh-stats2="0"] [data-dsh-line="2"] { display: none !important; }
+  /* Reveal the DSH-hidden "首 token 平均 Xs · Y tok/s" (it ships display:none but has an
+     API) and keep it in the SAME row as the 轮·步·LLM·工具调用 info. */
+  html.${HTML_CLASS}[data-dsh-stats1="1"] [data-dsh-ftoken="1"] { display: inline-block !important; }
   @keyframes dshMobPop {
     from { opacity: 0; transform: scale(.94) translateY(8px); }
     to { opacity: 1; transform: none; }
@@ -3567,18 +3570,26 @@ window.__ModuleLoader__.load({
       const applyStats = () => {
         if (!mobileDomAllowed()) return
         const root = document.querySelector('[class*="FJxK0a_root"]')
-        if (!root) return
-        const re1 = /轮|步|LLM|工具调用|首\s*token|tok\/s/i
-        const re2 = /缓存命中|输入|输出/i
-        for (const el of root.children) {
-          if (!(el instanceof HTMLElement)) continue
-          const t = (el.textContent || '').trim()
-          let line = 0
-          if (re2.test(t)) line = 2
-          else if (re1.test(t)) line = 1
-          if ((el.className || '').toString().includes('sep')) line = line || (el.previousElementSibling ? (el.previousElementSibling.getAttribute('data-dsh-line') || 0) : 0)
-          if (line) el.setAttribute('data-dsh-line', String(line))
-          else el.removeAttribute('data-dsh-line')
+        if (root) {
+          const re1 = /轮|步|LLM|工具调用|首\s*token|tok\/s/i
+          const re2 = /缓存命中|输入|输出/i
+          for (const el of root.children) {
+            if (!(el instanceof HTMLElement)) continue
+            const t = (el.textContent || '').trim()
+            let line = 0
+            if (re2.test(t)) line = 2
+            else if (re1.test(t)) line = 1
+            if ((el.className || '').toString().includes('sep')) line = line || (el.previousElementSibling ? (el.previousElementSibling.getAttribute('data-dsh-line') || 0) : 0)
+            if (line) el.setAttribute('data-dsh-line', String(line))
+            else el.removeAttribute('data-dsh-line')
+            // DSH ships "首 token 平均 Xs · Y tok/s" as display:none — reveal it (it has an
+            // API/interface; it belongs to the 轮·步·LLM·工具调用 line).
+            if ((t.indexOf('首') !== -1 && t.indexOf('token') !== -1) || (t.indexOf('tok/s') !== -1 && t.indexOf('平均') !== -1)) {
+              el.setAttribute('data-dsh-ftoken', '1')
+            } else if (el.getAttribute('data-dsh-ftoken')) {
+              el.removeAttribute('data-dsh-ftoken')
+            }
+          }
         }
       }
       const applyStatsState = (o) => {
