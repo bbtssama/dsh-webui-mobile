@@ -1561,12 +1561,21 @@ window.__ModuleLoader__.load({
   html.${HTML_CLASS} .dshMobFuncMask[data-open="true"] { display: flex !important; }
   html.${HTML_CLASS} .dshMobFuncSheet {
     width: min(100%, 320px) !important;
+    height: min(50vh, 420px) !important;
+    display: flex !important; flex-direction: column !important;
     background: var(--dsw-alias-bg-layer-2, var(--dsw-alias-bg-base, #fff)) !important;
     border-radius: 22px !important;
     padding: 16px !important;
     box-shadow: var(--dsw-shadow-lv3, 0 18px 56px rgba(0,0,0,.28)) !important;
     animation: dshMobPop .18s ease !important;
+    user-select: none !important; -webkit-user-select: none !important;
   }
+  html.${HTML_CLASS} .dshMobFuncList { overflow-y: auto !important; flex: 1 1 auto !important; min-height: 0 !important; }
+  /* Composer bottom status bar: hide per-line (1 = 轮·步·LLM·工具调用·首token,
+     2 = 缓存命中·输入输出). The spans are tagged with data-dsh-line by JS; hiding
+     them frees the bottom space so the input area moves down (no blank bar). */
+  html.${HTML_CLASS}[data-dsh-stats1="0"] [data-dsh-line="1"] { display: none !important; }
+  html.${HTML_CLASS}[data-dsh-stats2="0"] [data-dsh-line="2"] { display: none !important; }
   @keyframes dshMobPop {
     from { opacity: 0; transform: scale(.94) translateY(8px); }
     to { opacity: 1; transform: none; }
@@ -2680,6 +2689,53 @@ window.__ModuleLoader__.load({
       }
     }
 
+    function installWebuiToolsEntry() {
+      if (typeof document === 'undefined' || !window.MutationObserver) return
+      let row = null
+      const disposeRow = () => { if (row && row.isConnected) row.remove(); row = null }
+      const ensure = () => {
+        if (!mobileDomAllowed()) { disposeRow(); return }
+        const dialog = document.querySelector('[aria-modal="true"]')
+        if (!dialog) { disposeRow(); return }
+        const options = dialog.querySelector('[class*="_options"]')
+        // General settings tab (checked by 外观 text) — the home of this entry
+        if (!options || !/外观/.test(options.textContent || '')) { disposeRow(); return }
+        if (row && row.parentElement === options) return
+        disposeRow()
+        row = document.createElement('div')
+        row.className = 'dshMobCfgRow'
+        row.setAttribute('role', 'button')
+        const label = document.createElement('span'); label.textContent = 'WebUI 工具'
+        const chev = document.createElement('span'); chev.className = 'dshMobCfgRowChev'; chev.textContent = '›'
+        row.appendChild(label); row.appendChild(chev)
+        row.addEventListener('click', () => {
+          try { document.dispatchEvent(new CustomEvent('dsh-webui-tools-open')) } catch (_) {}
+        })
+        options.appendChild(row)
+      }
+      const observer = new MutationObserver(ensure)
+      observer.observe(document.body, { childList: true, subtree: true })
+      let mql = null
+      const onMq = () => ensure()
+      try {
+        if (window.matchMedia) {
+          mql = window.matchMedia(MOBILE_MQ)
+          if (mql.addEventListener) mql.addEventListener('change', onMq)
+          else if (mql.addListener) mql.addListener(onMq)
+        }
+      } catch (_) {}
+      return () => {
+        observer.disconnect()
+        try {
+          if (mql) {
+            if (mql.removeEventListener) mql.removeEventListener('change', onMq)
+            else if (mql.removeListener) mql.removeListener(onMq)
+          }
+        } catch (_) {}
+        disposeRow()
+      }
+    }
+
     // v0.3.4 lifts the drawer above the body-level onboarding notice while the
     // settings overlay is open (a :has() rule pinning z-index to 1001). But
     // select/popup menus portal to the BODY as well, and on some DSH builds
@@ -3310,6 +3366,18 @@ window.__ModuleLoader__.load({
             cell.addEventListener('click', () => { const st = readState(); st.theme = p.id; st.accent = ''; writeState(st); apply(st) })
             grid.appendChild(cell)
           }
+          // "原生主题": clear the custom theme (and accent) back to DSH's native look.
+          const native = document.createElement('button')
+          native.type = 'button'; native.className = 'dshMobThemePreset'; native.setAttribute('data-preset', 'native')
+          const nsw = document.createElement('div'); nsw.className = 'dshMobThemePresetSwatch'
+          nsw.style.background = 'linear-gradient(135deg, #ffffff 0 55%, #1b1d21 55% 100%)'
+          const nnm = document.createElement('div'); nnm.className = 'dshMobThemePresetName'; nnm.textContent = '原生主题'
+          native.appendChild(nsw); native.appendChild(nnm)
+          native.addEventListener('click', () => {
+            const st = readState(); st.theme = ''; st.accent = ''; writeState(st); apply(st)
+            closeSheet()
+          })
+          grid.appendChild(native)
           sheet.appendChild(grid)
           const pl = document.createElement('div'); pl.className = 'dshMobThemePalLabel'; pl.textContent = '主题色'
           sheet.appendChild(pl)
@@ -3438,8 +3506,46 @@ window.__ModuleLoader__.load({
       const MIN = 0.7, MAX = 1.5, STEP = 0.05
       const MENU = [
         { id: 'zoom', label: '字号缩放', desc: '放大 / 缩小聊天文字', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16M12 4v16"/></svg>' },
+        { id: 'stats1', label: '缓存命中 · 输入输出', desc: '显示/隐藏 底栏缓存行', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18M6 12h12M9 17h6"/></svg>' },
+        { id: 'stats2', label: '轮·步·LLM·工具调用', desc: '显示/隐藏 底栏统计行', icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3M12 3a9 9 0 1 0 9 9"/></svg>' },
         // future functions go here (array-driven, extensible)
       ]
+      const STATS_STORE = 'dsh-mobile-stats-v1'
+      const readStats = () => { try { const s = JSON.parse(localStorage.getItem(STATS_STORE) || 'null'); return (s && typeof s === 'object') ? s : {} } catch (_) { return {} } }
+      const writeStats = (o) => { try { localStorage.setItem(STATS_STORE, JSON.stringify(Object.assign({ ts: Date.now() }, o))) } catch (_) {} }
+      // Tag the composer's bottom status spans (FJxK0a_root) with the line they belong
+      // to (1 = 轮·步·LLM·工具调用·首token, 2 = 缓存命中·输入输出) so the toggles can
+      // hide just that line; hiding frees the bottom space (input moves down, no blank).
+      const applyStats = () => {
+        if (!mobileDomAllowed()) return
+        const root = document.querySelector('[class*="FJxK0a_root"]')
+        if (!root) return
+        const re1 = /轮|步|LLM|工具调用|首\s*token|tok\/s/i
+        const re2 = /缓存命中|输入|输出/i
+        for (const el of root.children) {
+          if (!(el instanceof HTMLElement)) continue
+          const t = (el.textContent || '').trim()
+          let line = 0
+          if (re2.test(t)) line = 2
+          else if (re1.test(t)) line = 1
+          if ((el.className || '').toString().includes('sep')) line = line || (el.previousElementSibling ? (el.previousElementSibling.getAttribute('data-dsh-line') || 0) : 0)
+          if (line) el.setAttribute('data-dsh-line', String(line))
+          else el.removeAttribute('data-dsh-line')
+        }
+      }
+      const applyStatsState = (o) => {
+        const r = o || readStats()
+        document.documentElement.setAttribute('data-dsh-stats1', r.line1 ? '1' : '0')
+        document.documentElement.setAttribute('data-dsh-stats2', r.line2 ? '1' : '0')
+      }
+      const refreshMenuItems = () => {
+        const r = readStats()
+        for (const el of document.querySelectorAll('.dshMobFuncItem[data-act]')) {
+          const id = el.getAttribute('data-act')
+          if (id === 'stats1') { const d = el.querySelector('.dshMobFuncDesc'); if (d) d.textContent = r.line1 ? '已开启（当前显示）' : '已关闭（当前隐藏）' }
+          if (id === 'stats2') { const d = el.querySelector('.dshMobFuncDesc'); if (d) d.textContent = r.line2 ? '已开启（当前显示）' : '已关闭（当前隐藏）' }
+        }
+      }
       let alive = true, mobile = false, mql = null
       let menuMask = null, zoomMask = null
       let longTimer = 0, suppressClick = false, downX = 0, downY = 0
@@ -3465,7 +3571,7 @@ window.__ModuleLoader__.load({
       const buildMenu = () => {
         menuMask = document.createElement('div'); menuMask.className = 'dshMobFuncMask'
         const sheet = document.createElement('div'); sheet.className = 'dshMobFuncSheet'
-        const title = document.createElement('div'); title.className = 'dshMobFuncTitle'; title.textContent = '功能'
+        const title = document.createElement('div'); title.className = 'dshMobFuncTitle'; title.textContent = 'WebUI 工具'
         sheet.appendChild(title)
         const list = document.createElement('div'); list.className = 'dshMobFuncList'
         for (const it of MENU) {
@@ -3479,8 +3585,19 @@ window.__ModuleLoader__.load({
         menuMask.addEventListener('click', (e) => { if (e.target === menuMask) closeMenu() })
         document.body.appendChild(menuMask)
       }
-      const openMenu = () => { if (!menuMask) buildMenu(); menuMask.setAttribute('data-open', 'true') }
-      const onMenuAct = (id) => { if (id === 'zoom') { closeMenu(); openZoom() } }
+      const openMenu = () => { if (!menuMask) buildMenu(); refreshMenuItems(); applyStats(); applyStatsState(); menuMask.setAttribute('data-open', 'true') }
+      const onMenuAct = (id) => {
+        if (id === 'zoom') { closeMenu(); openZoom(); return }
+        if (id === 'stats1' || id === 'stats2') {
+          const r = readStats()
+          r[id === 'stats1' ? 'line1' : 'line2'] = !(r[id === 'stats1' ? 'line1' : 'line2'])
+          writeStats(r)
+          applyStatsState(r)
+          applyStats()
+          refreshMenuItems()
+          return
+        }
+      }
 
       const buildZoom = () => {
         zoomMask = document.createElement('div'); zoomMask.className = 'dshMobZoomMask'
@@ -3526,8 +3643,17 @@ window.__ModuleLoader__.load({
       const onCtx = (e) => { if (e.target && e.target.closest && e.target.closest('.dshMobMenu')) e.preventDefault() }
       const onDrag = (e) => { if (e.target && e.target.closest && e.target.closest('.dshMobMenu')) e.preventDefault() }
 
+      let statsObs = null
+      const onToolsOpen = () => openMenu()
       const setup = () => {
         applyScale(readScale())
+        applyStatsState()
+        applyStats()
+        if (!statsObs && typeof MutationObserver !== 'undefined') {
+          statsObs = new MutationObserver(() => { requestAnimationFrame(() => { applyStatsState(); applyStats() }) })
+          statsObs.observe(document.body, { childList: true, subtree: true })
+        }
+        document.addEventListener('dsh-webui-tools-open', onToolsOpen, true)
         document.addEventListener('pointerdown', onDown, true)
         document.addEventListener('pointermove', onMove, true)
         document.addEventListener('pointerup', onUp, true)
@@ -3538,6 +3664,8 @@ window.__ModuleLoader__.load({
       }
       const teardown = () => {
         if (longTimer) clearTimeout(longTimer); longTimer = 0
+        if (statsObs) { statsObs.disconnect(); statsObs = null }
+        document.removeEventListener('dsh-webui-tools-open', onToolsOpen, true)
         document.removeEventListener('pointerdown', onDown, true)
         document.removeEventListener('pointermove', onMove, true)
         document.removeEventListener('pointerup', onUp, true)
@@ -3548,6 +3676,8 @@ window.__ModuleLoader__.load({
         if (menuMask && menuMask.isConnected) menuMask.remove(); menuMask = null
         if (zoomMask && zoomMask.isConnected) zoomMask.remove(); zoomMask = null
         document.documentElement.style.removeProperty('--dsw-chat-font-scale')
+        document.documentElement.removeAttribute('data-dsh-stats1')
+        document.documentElement.removeAttribute('data-dsh-stats2')
       }
       const onMq = () => { const n = mobileDomAllowed(); if (n === mobile) return; mobile = n; if (mobile) setup(); else teardown() }
       try { if (window.matchMedia) { mql = window.matchMedia(MOBILE_MQ); if (mql.addEventListener) mql.addEventListener('change', onMq); else if (mql.addListener) mql.addListener(onMq) } } catch (_) {}
@@ -3837,6 +3967,7 @@ window.__ModuleLoader__.load({
       ctx.effect(installZoom, 'dsh-webui-mobile: zoom')
       ctx.effect(installSettingsHeaderReparent, 'dsh-webui-mobile: settings-header-reparent')
       ctx.effect(installSettingsConfigRow, 'dsh-webui-mobile: settings-config-row')
+      ctx.effect(installWebuiToolsEntry, 'dsh-webui-mobile: webui-tools-entry')
       ctx.effect(installPopupZGuard, 'dsh-webui-mobile: popup-z-guard')
       ctx.effect(installContentFit, 'dsh-webui-mobile: content-fit')
       ctx.effect(
