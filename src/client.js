@@ -1611,6 +1611,33 @@ window.__ModuleLoader__.load({
   /* WebUI tools app tiles: dimmed when their feature is switched off. */
   html.${HTML_CLASS} .dshMobFuncApp.off .dshMobFuncAppIcon { opacity: .4 !important; }
   html.${HTML_CLASS} .dshMobFuncApp.off .dshMobFuncAppName { opacity: .5 !important; }
+  /* Header cluster order: [breadcrumb][后台任务][标准模式]. The headerActions flex
+     container's only child is a display:contents slot wrapper (data-slot
+     "conversation.session.header.actions"), so the two real flex items are ITS children:
+     the background-task QsffPG_root (order 1, middle) and the AgentPreset mode label
+     SVAs4q_label (order 2, far right). We target those by class with a DESCENDANT
+     selector — the previous > :has(...) rule matched only the wrapper (order on a
+     display:contents box does nothing) so the inline order never applied. Pure CSS
+     order (no DOM moves) so React re-renders can't revert it. */
+  html.${HTML_CLASS} [class*="wSkVaW_headerActions"] {
+    display: flex !important; align-items: center !important; gap: 4px !important;
+  }
+  html.${HTML_CLASS} [class*="wSkVaW_headerActions"] [class*="QsffPG_root"] { order: 1 !important; }
+  html.${HTML_CLASS} [class*="wSkVaW_headerActions"] [class*="SVAs4q_label"] { order: 2 !important; }
+  /* Background-task dropdown (QsffPG_* component): on mobile the anchor menu
+     overflows the right edge (336px at x≈228 → right edge 564 > 390) and covers
+     the chat. Pin it as a fitted fixed dropdown below the header: right-aligned,
+     viewport-clamped, scrollable. */
+  html.${HTML_CLASS} .QsffPG_menu {
+    position: fixed !important;
+    right: 8px !important;
+    left: auto !important;
+    top: calc(58px + env(safe-area-inset-top, 0px)) !important;
+    max-width: calc(100vw - 16px) !important;
+    max-height: 68vh !important;
+    overflow-y: auto !important;
+    display: flex !important; flex-direction: column !important;
+  }
   @keyframes dshMobPop {
     from { opacity: 0; transform: scale(.94) translateY(8px); }
     to { opacity: 1; transform: none; }
@@ -2792,6 +2819,39 @@ window.__ModuleLoader__.load({
           }
         } catch (_) {}
         disposeRow()
+      }
+    }
+
+    function installHeaderModeReposition() {
+      if (typeof document === 'undefined' || !window.MutationObserver) return
+      let mql = null
+      const apply = () => {
+        if (!mobileDomAllowed()) return
+        // ① keep the mode container at the end of the titleCluster (CSS order rules
+        // handle the inner [后台任务][标准模式] ordering — no DOM moves, React-safe).
+        const tc = [...document.querySelectorAll('*')].find(e => (e.className || '').toString().includes('wSkVaW_titleCluster'))
+        if (!tc) return
+        const modeHa = tc.querySelector('[class*="wSkVaW_headerActions"]')
+        if (modeHa && modeHa !== tc.lastElementChild) tc.appendChild(modeHa)
+      }
+      const obs = new MutationObserver(() => { requestAnimationFrame(apply) })
+      obs.observe(document.body, { childList: true, subtree: true })
+      try {
+        if (window.matchMedia) {
+          mql = window.matchMedia(MOBILE_MQ)
+          if (mql.addEventListener) mql.addEventListener('change', apply)
+          else if (mql.addListener) mql.addListener(apply)
+        }
+      } catch (_) {}
+      apply()
+      return () => {
+        obs.disconnect()
+        try {
+          if (mql) {
+            if (mql.removeEventListener) mql.removeEventListener('change', apply)
+            else if (mql.removeListener) mql.removeListener(apply)
+          }
+        } catch (_) {}
       }
     }
 
@@ -4192,6 +4252,7 @@ window.__ModuleLoader__.load({
       ctx.effect(installSettingsHeaderReparent, 'dsh-webui-mobile: settings-header-reparent')
       ctx.effect(installSettingsConfigRow, 'dsh-webui-mobile: settings-config-row')
       ctx.effect(installWebuiToolsEntry, 'dsh-webui-mobile: webui-tools-entry')
+      ctx.effect(installHeaderModeReposition, 'dsh-webui-mobile: header-mode-reposition')
       ctx.effect(installPopupZGuard, 'dsh-webui-mobile: popup-z-guard')
       ctx.effect(installContentFit, 'dsh-webui-mobile: content-fit')
       ctx.effect(
