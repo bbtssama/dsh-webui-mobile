@@ -2827,8 +2827,22 @@ window.__ModuleLoader__.load({
       let mql = null
       const apply = () => {
         if (!mobileDomAllowed()) return
-        // Keep the mode/task cluster at the end of the titleCluster so the mode sits
-        // at the far right, after the background-task indicator.
+        // ① Mode label: fixed short display — 4 CJK chars or 8 latin chars + ".."
+        //    (user spec: "Router Standard (experimental)" → "Router S.."). Display-only;
+        //    the full name goes to the title attribute. Re-applied by the observer.
+        try {
+          const modeLabel = [...document.querySelectorAll('span')].find(e => (e.className || '').toString().includes('SVAs4q_label'))
+          if (modeLabel) {
+            const full = (modeLabel.getAttribute('data-dsh-full') || modeLabel.textContent || '').trim()
+            modeLabel.setAttribute('data-dsh-full', full)
+            modeLabel.title = full
+            const cjk = (full.match(/[\u4e00-\u9fff]/g) || []).length
+            const short = cjk >= 2 ? full.slice(0, 4) : full.slice(0, 8)
+            const want = full.length > short.length ? short + '..' : short
+            if (modeLabel.textContent !== want) modeLabel.textContent = want
+          }
+        } catch (_) {}
+        // ② keep the mode container at the end of the titleCluster
         const tc = [...document.querySelectorAll('*')].find(e => (e.className || '').toString().includes('wSkVaW_titleCluster'))
         if (!tc) return
         const modeHa = tc.querySelector('[class*="wSkVaW_headerActions"]')
