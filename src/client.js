@@ -1624,6 +1624,32 @@ window.__ModuleLoader__.load({
   }
   html.${HTML_CLASS} [class*="wSkVaW_headerActions"] [class*="QsffPG_root"] { order: 1 !important; }
   html.${HTML_CLASS} [class*="wSkVaW_headerActions"] [class*="SVAs4q_label"] { order: 2 !important; }
+  /* Header squeeze protection: the title row must NEVER spill onto the tabs row.
+     Long mode/task text truncates with ellipsis and the whole row auto-shrinks
+     (JS reduces --dsh-hdr-scale when the row still overflows). */
+  html.${HTML_CLASS} [class*="wSkVaW_titleRow"] {
+    display: flex !important; flex-wrap: nowrap !important; align-items: center !important;
+    width: 100% !important; min-width: 0 !important; max-width: 100vw !important;
+    overflow: hidden !important; min-height: 28px !important;
+  }
+  html.${HTML_CLASS} [class*="wSkVaW_titleCluster"] { min-width: 0 !important; flex: 1 1 auto !important; overflow: hidden !important; }
+  html.${HTML_CLASS} [class*="wSkVaW_crumbs"] { flex: 0 1 auto !important; min-width: 0 !important; overflow: hidden !important; max-width: 36vw !important; }
+  html.${HTML_CLASS} [class*="wSkVaW_headerActions"] {
+    min-width: 0 !important; flex: 0 1 auto !important; overflow: hidden !important; max-width: 58vw !important;
+    display: flex !important; align-items: center !important; gap: 4px !important;
+  }
+  html.${HTML_CLASS} [class*="wSkVaW_headerActions"] > * { min-width: 0 !important; flex: 0 1 auto !important; overflow: hidden !important; }
+  html.${HTML_CLASS} [class*="SVAs4q_label"] {
+    display: inline-block !important; min-width: 0 !important; max-width: 24vw !important;
+    overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important;
+    font-size: calc(12.5px * var(--dsh-hdr-scale, 1)) !important;
+  }
+  html.${HTML_CLASS} [class*="QsffPG_count"] {
+    display: inline-block !important; min-width: 0 !important; max-width: 28vw !important;
+    overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important;
+    font-size: calc(12.5px * var(--dsh-hdr-scale, 1)) !important;
+  }
+  html.${HTML_CLASS} [class*="wSkVaW_tabs"] { flex: none !important; position: relative !important; z-index: 2 !important; }
   /* Background-task dropdown (QsffPG_* component): on mobile the anchor menu
      overflows the right edge (336px at x≈228 → right edge 564 > 390) and covers
      the chat. Pin it as a fitted fixed dropdown below the header: right-aligned,
@@ -2827,6 +2853,20 @@ window.__ModuleLoader__.load({
       let mql = null
       const apply = () => {
         if (!mobileDomAllowed()) return
+        // ③ AUTO-SHRINK: if the title row still overflows (e.g. a very long mode name
+        //    like "Router Standard (experimental)" + a task indicator), reduce the
+        //    header text scale until it fits; grow back when there is headroom.
+        const tr = document.querySelector('[class*="wSkVaW_titleRow"]')
+        if (tr) {
+          const over = tr.scrollWidth - tr.clientWidth
+          let cur = parseFloat(document.documentElement.style.getPropertyValue('--dsh-hdr-scale'))
+          if (!Number.isFinite(cur)) cur = 1
+          if (over > 4 && cur > 0.72) {
+            document.documentElement.style.setProperty('--dsh-hdr-scale', String(Math.max(0.72, +(cur - 0.08).toFixed(2))))
+          } else if (over <= 0 && cur < 1) {
+            document.documentElement.style.setProperty('--dsh-hdr-scale', String(Math.min(1, +(cur + 0.05).toFixed(2))))
+          }
+        }
         // ① keep the mode container at the end of the titleCluster (CSS order rules
         // handle the inner [后台任务][标准模式] ordering — no DOM moves, React-safe).
         const tc = [...document.querySelectorAll('*')].find(e => (e.className || '').toString().includes('wSkVaW_titleCluster'))
