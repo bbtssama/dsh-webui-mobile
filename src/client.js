@@ -1624,19 +1624,6 @@ window.__ModuleLoader__.load({
   }
   html.${HTML_CLASS} [class*="wSkVaW_headerActions"] [class*="QsffPG_root"] { order: 1 !important; }
   html.${HTML_CLASS} [class*="wSkVaW_headerActions"] [class*="SVAs4q_label"] { order: 2 !important; }
-  /* Gentle overflow guard (restores the native layout tendency): only the two texts
-     that can get long — the mode label ("Router Standard (experimental)") and the
-     background-task count ("1 个后台任务运行中") — are clamped with ellipsis. */
-  html.${HTML_CLASS} [class*="SVAs4q_label"] {
-    display: inline-block !important; max-width: 30vw !important;
-    overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important;
-    vertical-align: middle !important;
-  }
-  html.${HTML_CLASS} [class*="QsffPG_count"] {
-    display: inline-block !important; max-width: 34vw !important;
-    overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important;
-    vertical-align: middle !important;
-  }
   /* Background-task dropdown (QsffPG_* component): on mobile the anchor menu
      overflows the right edge (336px at x≈228 → right edge 564 > 390) and covers
      the chat. Pin it as a fitted fixed dropdown below the header: right-aligned,
