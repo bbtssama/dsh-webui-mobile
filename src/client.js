@@ -1637,12 +1637,6 @@ window.__ModuleLoader__.load({
     overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important;
     vertical-align: middle !important;
   }
-  /* Title row clamp: the row's content can be far wider than the viewport
-     (measured 981px inside a 390px viewport). Clamp the row to the viewport and
-     clip, so it can never push/overlay the tabs row below. */
-  html.${HTML_CLASS} [class*="wSkVaW_titleRow"] {
-    width: 100% !important; max-width: 100vw !important; overflow: hidden !important;
-  }
   /* Background-task dropdown (QsffPG_* component): on mobile the anchor menu
      overflows the right edge (336px at x≈228 → right edge 564 > 390) and covers
      the chat. Pin it as a fitted fixed dropdown below the header: right-aligned,
